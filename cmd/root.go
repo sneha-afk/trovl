@@ -32,8 +32,8 @@ var rootCmd = &cobra.Command{
 	Use:   "trovl",
 	Short: "A cross-platform symlink manager.",
 	Long: `trovl is a cross-platform symlink manager that aims to make file management easier and more efficient.
-		It features configurable paths for files and directories that vary in location depending on the system,
-		and true-symlinking when possible.
+It features configurable paths for files and directories that vary in location depending on the system,
+and true-symlinking when possible.
 	`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
@@ -49,14 +49,21 @@ func Execute() {
 	}
 }
 
+type Globals struct {
+	Verbose bool
+}
+
+var GlobalState Globals
+
 func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.trovl.yaml)")
+	rootCmd.PersistentFlags().BoolVarP(&GlobalState.Verbose, "verbose", "v", false, "have verbose outputs for actions taken")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

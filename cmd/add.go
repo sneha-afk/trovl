@@ -52,18 +52,11 @@ func CleanLink(raw string) (string, error) {
 var addCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Adds a symlink that points to the target file",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long: `To add a symlink, specify via:
+  trovl add <target> <symlink>
+For example, to create a link in the current directory to .vimrc at home:
+  trovl add ~/.vimrc vimrclink`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// fmt.Println("add called")
-		// for _, arg := range args {
-		// 	fmt.Println(arg)
-		// }
-
 		target, err := CleanLink(args[0])
 		if err != nil {
 			log.Fatalln("Error: invalid filepath (target): ", target)
@@ -75,7 +68,7 @@ to quickly create a Cobra application.`,
 
 		targetFile, err := os.Open(target)
 		if err != nil {
-			log.Fatalln("Error: could not open target file: ", err)
+			log.Fatalln("Error: could not open target file (does it exist?): ", err)
 		}
 		targetFileInfo, err := targetFile.Stat()
 		if err != nil {
@@ -97,22 +90,16 @@ to quickly create a Cobra application.`,
 
 		links.Add(link)
 
-		// TODO: verbose mode to print all ops
+		if GlobalState.Verbose {
+			log.Printf("Add: created link from %v -> %v\n", symlink, target)
+		}
 	},
 	Args:    cobra.MinimumNArgs(2),
-	Aliases: []string{"link"},
+	Aliases: []string{"link", "create"},
 }
 
 func init() {
 	rootCmd.AddCommand(addCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// addCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	addCmd.Flags().BoolVar(&useRelative, "relative", false, "Retain relative path to target")
+	addCmd.Flags().BoolVar(&useRelative, "relative", false, "retain relative paths to target")
 }
