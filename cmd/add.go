@@ -54,25 +54,25 @@ var addCmd = &cobra.Command{
 	Short: "Adds a symlink that points to the target file",
 	Long: `To add a symlink, specify via:
   trovl add <target> <symlink>
-For example, to create a link in the current directory to .vimrc at home:
-  trovl add ~/.vimrc vimrclink`,
+For example, to create a link from a dotfiles/.vimrc to .vimrc at home:
+  trovl add ~/dotfiles/.vimrc ~/.vimrc`,
 	Run: func(cmd *cobra.Command, args []string) {
 		target, err := CleanLink(args[0])
 		if err != nil {
-			log.Fatalln("Error: invalid filepath (target): ", target)
+			log.Fatalln("[ERROR] Add: invalid path (target)", err)
 		}
 		symlink, err := CleanLink(args[1])
 		if err != nil {
-			log.Fatalln("Error: invalid filepath (symlink): ", symlink)
+			log.Fatalln("[ERROR] Add: invalid path (symlink)", err)
 		}
 
 		targetFile, err := os.Open(target)
 		if err != nil {
-			log.Fatalln("Error: could not open target file (does it exist?): ", err)
+			log.Fatalln("[ERROR] Add: ", err)
 		}
 		targetFileInfo, err := targetFile.Stat()
 		if err != nil {
-			log.Fatalln("Error: could not get target file's info: ", err)
+			log.Fatalln("[ERROR] Add: could not get target file info: ", err)
 		}
 
 		var linkType models.LinkType
@@ -82,16 +82,15 @@ For example, to create a link in the current directory to .vimrc at home:
 			linkType = models.LinkFile
 		}
 
-		link := models.Link{
-			Target:    target,
-			LinkMount: symlink,
-			Type:      linkType,
+		targetFile.Close()
+
+		link := links.Construct(target, symlink, linkType)
+		if err := links.Add(link); err != nil {
+			log.Fatalln("[ERROR] Add: ", err)
 		}
 
-		links.Add(link)
-
 		if GlobalState.Verbose {
-			log.Printf("Add: created link from %v -> %v\n", symlink, target)
+			log.Printf("[INFO] Add: created link from %v -> %v\n", symlink, target)
 		}
 	},
 	Args:    cobra.MinimumNArgs(2),
