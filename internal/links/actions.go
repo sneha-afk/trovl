@@ -63,14 +63,13 @@ func Construct(targetPath, symlinkPath string, linkType models.LinkType) (models
 	if valid, err := ValidatePath(symlinkPath); valid || err == nil {
 		fmt.Printf("[WARN] Construct: file %v already exists, should it be overwritten? [y/N]: ", symlinkPath)
 		var input = 'n'
-		_, err := fmt.Scanf("%c", &input)
+		_, err := fmt.Scanf("%c\n", &input)
 		if err != nil {
 			return models.Link{}, fmt.Errorf("could not read input, no action taken: %v", err)
 		}
 
 		if unicode.ToLower(input) == 'y' {
 			fmt.Printf("[INFO] Construct: user accepted overwriting existing file, continuing\n")
-			// TODO: double check if Linux allows direct overwriting of files
 			if err := os.Remove(symlinkPath); err != nil {
 				return models.Link{}, fmt.Errorf("could not deleting existing file: %v", err)
 			}
