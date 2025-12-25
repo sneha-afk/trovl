@@ -86,7 +86,7 @@ For example, to create a link from a dotfiles/.vimrc to .vimrc at home:
 
 		link := links.Construct(target, symlink, linkType)
 		if err := links.Add(link); err != nil {
-			log.Fatalln("[ERROR] Add: ", err)
+			log.Fatalf("[ERROR] Add: %v	(maybe try running as admin?)\n", err)
 		}
 
 		if GlobalState.Verbose {

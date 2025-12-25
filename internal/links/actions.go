@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"unicode"
 
 	"github.com/sneha-afk/trovl/internal/models"
 )
@@ -19,7 +20,7 @@ func ValidatePath(path string) (bool, error) {
 	return true, nil
 }
 
-func ValidateSymlink(symlinkPath string) (bool, error) {
+func IsSymlink(symlinkPath string) (bool, error) {
 	if valid, err := ValidatePath(symlinkPath); !valid || err != nil {
 		return false, err
 	}
@@ -28,14 +29,23 @@ func ValidateSymlink(symlinkPath string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
 	if symlinkInfo.Mode()&fs.ModeSymlink == 0 {
 		return false, fmt.Errorf("%v is not a symlink", symlinkPath)
 	}
+	return true, nil
+}
 
-	// TODO: reeval this logic, does it matter if the target is invalid?
+// ValidateSymlink first ensures the symlink is indeed one at all, and that it is pointing
+// to a valid target file that exists.
+func ValidateSymlink(symlinkPath string) (bool, error) {
+	if valid, err := IsSymlink(symlinkPath); !valid || err != nil {
+		return false, err
+	}
+
 	targetPath, err := os.Readlink(symlinkPath)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("target file is not readable: %v", err)
 	}
 
 	if valid, err := ValidatePath(targetPath); !valid || err != nil {
@@ -51,9 +61,24 @@ func Construct(targetPath, symlinkPath string, linkType models.LinkType) models.
 		log.Fatalf("[ERROR] Construct: invalid path '%v': %v\n", targetPath, err)
 	}
 
-	// TODO: if the symlink file already exists, ask for user input to overwrite?
 	if valid, err := ValidatePath(symlinkPath); valid || err == nil {
-		log.Printf("[WARN] Construct: file %v already exists, overwriting with new symlink", symlinkPath)
+		fmt.Printf("[WARN] Construct: file %v already exists, should it be overwritten? [y/N]: ", symlinkPath)
+		var input = 'n'
+		_, err := fmt.Scanf("%c", &input)
+		if err != nil {
+			log.Fatalf("[ERROR] Construct: could not read input, no action taken: %v", err)
+		}
+
+		if unicode.ToLower(input) == 'y' {
+			fmt.Printf("[INFO] Construct: user accepted overwriting existing file, continuing\n")
+			// TODO: double check if Linux allows direct overwriting of files
+			if err := os.Remove(symlinkPath); err != nil {
+				log.Fatalf("[ERROR] Construct: could not delete existing file: %v", err)
+			}
+		} else {
+			fmt.Printf("[INFO] Construct: user declined overwriting existing file, no action taken\n")
+			os.Exit(0)
+		}
 	}
 
 	return models.Link{

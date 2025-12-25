@@ -5,7 +5,6 @@ type LinkType int
 const (
 	LinkFile LinkType = iota
 	LinkDirectory
-	// TODO: differentiate junctions on Windows?
 )
 
 type Link struct {
