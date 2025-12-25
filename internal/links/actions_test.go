@@ -11,41 +11,44 @@ import (
 )
 
 func TestValidatePath(t *testing.T) {
+	tmp := t.TempDir()
+	pathExists := filepath.Join(tmp, "test_exists.go")
+
 	tests := []struct {
 		name      string
 		param     string
 		expected  bool
 		expectErr bool
 	}{
-		{"existing file", "test_exists.go", true, false},
+		{"existing file", pathExists, true, false},
 		{"non-existing file", "test_exists_no.go", false, true},
 	}
-
-	file, err := os.Create("test_exists.go")
+	file, err := os.Create(pathExists)
 	if err != nil {
 		log.Fatalf("TestValidatePath: could not create test file: %v", err)
 	}
 	file.Close()
 
-	for _, testcase := range tests {
-		t.Run(testcase.name, func(t *testing.T) {
-			res, err := links.ValidatePath(testcase.param)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := links.ValidatePath(tc.param)
 
-			if res != testcase.expected {
-				t.Errorf("expected %v, got %v (error: %v)", testcase.expected, res, err)
+			if res != tc.expected {
+				t.Errorf("expected %v, got %v (error: %v)", tc.expected, res, err)
 			}
-			if err != nil && testcase.expectErr == false {
+			if err != nil && tc.expectErr == false {
 				t.Errorf("%v", err)
 			}
 		})
 	}
 
-	if err := os.Remove("test_exists.go"); err != nil {
+	if err := os.Remove(pathExists); err != nil {
 		log.Fatalf("TestValidatePath: could not delete test file: %v", err)
 	}
 }
 
-func TestConstruct(t *testing.T) {
+// Calls Construct and Add to simulate full work through of the add subcommand.
+func TestAdd(t *testing.T) {
 	type result struct {
 		target string
 		mount  string
@@ -98,7 +101,8 @@ func TestConstruct(t *testing.T) {
 				os.WriteFile(targetPath, []byte("target"), 0644)
 			}
 			if tc.linkExists {
-				os.WriteFile(linkPath, []byte("existing"), 0644)
+				// os.WriteFile(linkPath, []byte("existing"), 0644)
+				os.Symlink(targetPath, linkPath)
 			}
 
 			// create a pipe to simulate stdin/out
@@ -134,6 +138,131 @@ func TestConstruct(t *testing.T) {
 					if _, err := os.Stat(linkPath); err == nil {
 						t.Error("expected existing link file to be deleted (yes to overwrit), but it still exists")
 					}
+				}
+			}
+
+			err = links.Add(res)
+			if (err != nil) != tc.expected.err {
+				t.Errorf("expected error: %v, got: %v", tc.expected.err, err)
+			}
+
+		})
+	}
+}
+
+func TestValidateSymlink(t *testing.T) {
+	type result struct {
+		valid bool
+		err   bool
+	}
+
+	tests := []struct {
+		name          string
+		createSymlink bool
+		target        string
+		expected      result
+	}{
+		{
+			name:          "success: symlink to a valid file",
+			createSymlink: true,
+			target:        "valid_file.txt",
+			expected:      result{valid: true, err: false},
+		},
+		{
+			name:          "success: symlink points to a directory",
+			createSymlink: true,
+			target:        "valid_directory",
+			expected:      result{valid: true, err: false},
+		},
+		{
+			name:          "error: valid symlink to non-existing target",
+			createSymlink: true,
+			target:        "non_existing_target.txt",
+			expected:      result{valid: false, err: true},
+		},
+		{
+			name:          "error: invalid symlink path",
+			createSymlink: false,
+			target:        "invalid_symlink.txt",
+			expected:      result{valid: false, err: true},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tmp := t.TempDir()
+			targetPath := filepath.Join(tmp, tc.target)
+			symlinkPath := filepath.Join(tmp, "symlink.txt")
+
+			switch tc.target {
+			case "valid_file.txt", "invalid_symlink.txt":
+				os.WriteFile(targetPath, []byte("test content"), 0644)
+			case "valid_directory":
+				os.Mkdir(targetPath, 0755)
+			}
+
+			if tc.createSymlink {
+				os.Symlink(targetPath, symlinkPath)
+			}
+
+			valid, err := links.ValidateSymlink(symlinkPath)
+
+			if valid != tc.expected.valid {
+				t.Errorf("expected valid: %v, got: %v", tc.expected.valid, valid)
+			}
+			if (err != nil) != tc.expected.err {
+				t.Errorf("expected error: %v, got: %v", tc.expected.err, err)
+			}
+		})
+	}
+}
+
+func TestRemoveByPath(t *testing.T) {
+	tests := []struct {
+		name         string
+		targetExists bool
+		createLink   bool
+		expectErr    bool
+	}{
+		{
+			name:         "success: remove existing symlink",
+			targetExists: true,
+			createLink:   true,
+			expectErr:    false,
+		},
+		{
+			name:         "error: symlink does not exist",
+			targetExists: false,
+			createLink:   false,
+			expectErr:    true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tmp := t.TempDir()
+			targetPath := filepath.Join(tmp, "target.txt")
+			linkPath := filepath.Join(tmp, "link.txt")
+
+			if tc.targetExists {
+				os.WriteFile(targetPath, []byte("target"), 0644)
+			}
+
+			if tc.createLink {
+				if err := os.Symlink(targetPath, linkPath); err != nil {
+					t.Errorf("error during link setup: %v", err)
+				}
+			}
+
+			err := links.RemoveByPath(linkPath)
+
+			if (err != nil) != tc.expectErr {
+				t.Errorf("expected error: %v, got: %v", tc.expectErr, err)
+			}
+
+			if !tc.expectErr {
+				if _, err := os.Lstat(linkPath); err == nil {
+					t.Error("expected symlink to be removed, but it still exists")
 				}
 			}
 		})

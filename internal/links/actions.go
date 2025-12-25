@@ -48,7 +48,7 @@ func ValidateSymlink(symlinkPath string) (bool, error) {
 	}
 
 	if valid, err := ValidatePath(targetPath); !valid || err != nil {
-		return false, err
+		return false, fmt.Errorf("could not validate target: %v", err)
 	}
 
 	return true, nil
@@ -90,15 +90,14 @@ func Construct(targetPath, symlinkPath string, linkType models.LinkType) (models
 // Wrapper around os.Symlink which is already OS-agnostic
 // Precondition: there is no existing file where the symlink was specified
 func Add(link models.Link) error {
-	// TODO: use linktype to debug Windows directory caveats
 	err := os.Symlink(link.Target, link.LinkMount)
 	return err
 }
 
 // RemoveByPath takes in the path to a symlink to remove, while keeping the original
-// file intact.
+// file intact (note: target file is not checked for existence as the symlink is being removed.)
 func RemoveByPath(path string) error {
-	if valid, err := ValidateSymlink(path); !valid || err != nil {
+	if valid, err := IsSymlink(path); !valid || err != nil {
 		return fmt.Errorf("invalid symlink: %v", err)
 	}
 	return os.Remove(path)
