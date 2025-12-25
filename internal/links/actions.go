@@ -3,7 +3,6 @@ package links
 import (
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
 	"unicode"
 
@@ -13,10 +12,10 @@ import (
 // ValidatePath checks if a file at the given path exists and is openable.
 func ValidatePath(path string) (bool, error) {
 	file, err := os.Open(path)
+	file.Close()
 	if err != nil {
 		return false, err
 	}
-	file.Close()
 	return true, nil
 }
 
@@ -56,9 +55,9 @@ func ValidateSymlink(symlinkPath string) (bool, error) {
 }
 
 // Construct a Link type and validate the target file exists.
-func Construct(targetPath, symlinkPath string, linkType models.LinkType) models.Link {
+func Construct(targetPath, symlinkPath string, linkType models.LinkType) (models.Link, error) {
 	if valid, err := ValidatePath(targetPath); !valid || err != nil {
-		log.Fatalf("[ERROR] Construct: invalid path '%v': %v\n", targetPath, err)
+		return models.Link{}, fmt.Errorf("invalid path '%v': %v", targetPath, err)
 	}
 
 	if valid, err := ValidatePath(symlinkPath); valid || err == nil {
@@ -66,18 +65,17 @@ func Construct(targetPath, symlinkPath string, linkType models.LinkType) models.
 		var input = 'n'
 		_, err := fmt.Scanf("%c", &input)
 		if err != nil {
-			log.Fatalf("[ERROR] Construct: could not read input, no action taken: %v", err)
+			return models.Link{}, fmt.Errorf("could not read input, no action taken: %v", err)
 		}
 
 		if unicode.ToLower(input) == 'y' {
 			fmt.Printf("[INFO] Construct: user accepted overwriting existing file, continuing\n")
 			// TODO: double check if Linux allows direct overwriting of files
 			if err := os.Remove(symlinkPath); err != nil {
-				log.Fatalf("[ERROR] Construct: could not delete existing file: %v", err)
+				return models.Link{}, fmt.Errorf("could not deleting existing file: %v", err)
 			}
 		} else {
-			fmt.Printf("[INFO] Construct: user declined overwriting existing file, no action taken\n")
-			os.Exit(0)
+			return models.Link{}, fmt.Errorf("user declined overwriting existing file, no action taken")
 		}
 	}
 
@@ -85,11 +83,12 @@ func Construct(targetPath, symlinkPath string, linkType models.LinkType) models.
 		Target:    targetPath,
 		LinkMount: symlinkPath,
 		Type:      linkType,
-	}
+	}, nil
 }
 
 // Add a symlink specified by the Link class.
 // Wrapper around os.Symlink which is already OS-agnostic
+// Precondition: there is no existing file where the symlink was specified
 func Add(link models.Link) error {
 	// TODO: use linktype to debug Windows directory caveats
 	err := os.Symlink(link.Target, link.LinkMount)
@@ -100,7 +99,7 @@ func Add(link models.Link) error {
 // file intact.
 func RemoveByPath(path string) error {
 	if valid, err := ValidateSymlink(path); !valid || err != nil {
-		log.Fatalln("[ERROR]: RemoveByPath: invalid symlink: ", err)
+		return fmt.Errorf("invalid symlink: %v", err)
 	}
 	return os.Remove(path)
 }

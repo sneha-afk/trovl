@@ -84,7 +84,11 @@ For example, to create a link from a dotfiles/.vimrc to .vimrc at home:
 
 		targetFile.Close()
 
-		link := links.Construct(target, symlink, linkType)
+		link, err := links.Construct(target, symlink, linkType)
+		if err != nil {
+			log.Fatalf("[ERROR] Add: could not construct symlink: %v", err)
+		}
+
 		if err := links.Add(link); err != nil {
 			log.Fatalf("[ERROR] Add: %v	(maybe try running as admin?)\n", err)
 		}
