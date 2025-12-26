@@ -1,13 +1,18 @@
 package links
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
+	"os/user"
+	"path/filepath"
 	"unicode"
 
 	"github.com/sneha-afk/trovl/internal/models"
 )
+
+var ErrDeclinedOverwrite = errors.New("user declined overwriting existing file, no action taken")
 
 // ValidatePath checks if a file at the given path exists and is openable.
 func ValidatePath(path string) (bool, error) {
@@ -54,11 +59,61 @@ func ValidateSymlink(symlinkPath string) (bool, error) {
 	return true, nil
 }
 
+// CleanLink defaults to using an absolute filepath, only relative if specified
+// Guaranteed that filepath.Clean has been called before returning
+func CleanLink(raw string, useRelative bool) (string, error) {
+	var ret string
+	var err error = nil
+
+	// Handle issues with not dealing with "~" correctly
+	if len(raw) > 0 && raw[0] == '~' {
+		usr, err := user.Current()
+		if err != nil {
+			return "", err
+		}
+		raw = filepath.Join(usr.HomeDir, raw[1:])
+	}
+
+	if useRelative {
+		ret = filepath.Clean(raw)
+	} else {
+		ret, err = filepath.Abs(raw)
+	}
+	return ret, err
+}
+
 // Construct a Link type and validate the target file exists.
-func Construct(targetPath, symlinkPath string, linkType models.LinkType) (models.Link, error) {
+func Construct(targetPath, symlinkPath string, useRelative bool) (models.Link, error) {
+	targetPath, err := CleanLink(targetPath, useRelative)
+	if err != nil {
+		return models.Link{}, fmt.Errorf("invalid path (target): %v", err)
+	}
+	symlinkPath, err = CleanLink(symlinkPath, useRelative)
+	if err != nil {
+		return models.Link{}, fmt.Errorf("invalid path (symlink): %v", err)
+	}
+
 	if valid, err := ValidatePath(targetPath); !valid || err != nil {
 		return models.Link{}, fmt.Errorf("invalid path '%v': %v", targetPath, err)
 	}
+
+	targetFile, err := os.Open(targetPath)
+	if err != nil {
+		return models.Link{}, err
+	}
+	targetFileInfo, err := targetFile.Stat()
+	if err != nil {
+		return models.Link{}, fmt.Errorf("could not get target file info: %v", err)
+	}
+
+	var linkType models.LinkType
+	if targetFileInfo.IsDir() {
+		linkType = models.LinkDirectory
+	} else {
+		linkType = models.LinkFile
+	}
+
+	targetFile.Close()
 
 	if valid, err := ValidatePath(symlinkPath); valid || err == nil {
 		fmt.Printf("[WARN] Construct: file %v already exists, should it be overwritten? [y/N]: ", symlinkPath)
@@ -74,7 +129,8 @@ func Construct(targetPath, symlinkPath string, linkType models.LinkType) (models
 				return models.Link{}, fmt.Errorf("could not deleting existing file: %v", err)
 			}
 		} else {
-			return models.Link{}, fmt.Errorf("user declined overwriting existing file, no action taken")
+			fmt.Printf("[INFO] Construct: user declined overwriting existing file, continuing\n")
+			return models.Link{}, ErrDeclinedOverwrite
 		}
 	}
 
@@ -96,6 +152,10 @@ func Add(link models.Link) error {
 // RemoveByPath takes in the path to a symlink to remove, while keeping the original
 // file intact (note: target file is not checked for existence as the symlink is being removed.)
 func RemoveByPath(path string) error {
+	path, err := CleanLink(path, true)
+	if err != nil {
+		return fmt.Errorf("invalid path (symlink): %v", err)
+	}
 	if valid, err := IsSymlink(path); !valid || err != nil {
 		return fmt.Errorf("invalid symlink: %v", err)
 	}

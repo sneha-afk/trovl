@@ -32,3 +32,8 @@ go.work.sum
 # .vscode/
 
 trovl
+
+# manifests
+.trovl
+trovl.json
+.trovl.json

@@ -23,30 +23,14 @@ package cmd
 
 import (
 	"log"
-	"os"
-	"path/filepath"
 
 	"github.com/sneha-afk/trovl/internal/links"
-	"github.com/sneha-afk/trovl/internal/models"
 	"github.com/spf13/cobra"
 )
 
 var (
 	useRelative bool
 )
-
-// CleanLink defaults to using an absolute filepath, only relative if specified
-// Guaranteed that filepath.Clean has been called before returning
-func CleanLink(raw string) (string, error) {
-	var ret string
-	var err error = nil
-	if useRelative {
-		ret = filepath.Clean(raw)
-	} else {
-		ret, err = filepath.Abs(raw)
-	}
-	return ret, err
-}
 
 // addCmd represents the add command
 var addCmd = &cobra.Command{
@@ -57,34 +41,10 @@ var addCmd = &cobra.Command{
 For example, to create a link from a dotfiles/.vimrc to .vimrc at home:
   trovl add ~/dotfiles/.vimrc ~/.vimrc`,
 	Run: func(cmd *cobra.Command, args []string) {
-		target, err := CleanLink(args[0])
-		if err != nil {
-			log.Fatalln("[ERROR] Add: invalid path (target)", err)
-		}
-		symlink, err := CleanLink(args[1])
-		if err != nil {
-			log.Fatalln("[ERROR] Add: invalid path (symlink)", err)
-		}
+		target := args[0]
+		symlink := args[1]
 
-		targetFile, err := os.Open(target)
-		if err != nil {
-			log.Fatalln("[ERROR] Add: ", err)
-		}
-		targetFileInfo, err := targetFile.Stat()
-		if err != nil {
-			log.Fatalln("[ERROR] Add: could not get target file info: ", err)
-		}
-
-		var linkType models.LinkType
-		if targetFileInfo.IsDir() {
-			linkType = models.LinkDirectory
-		} else {
-			linkType = models.LinkFile
-		}
-
-		targetFile.Close()
-
-		link, err := links.Construct(target, symlink, linkType)
+		link, err := links.Construct(target, symlink, useRelative)
 		if err != nil {
 			log.Fatalf("[ERROR] Add: could not construct symlink: %v", err)
 		}

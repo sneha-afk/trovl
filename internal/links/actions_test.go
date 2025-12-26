@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/sneha-afk/trovl/internal/links"
-	"github.com/sneha-afk/trovl/internal/models"
 )
 
 func TestValidatePath(t *testing.T) {
@@ -122,7 +121,7 @@ func TestAdd(t *testing.T) {
 				t.Cleanup(func() { os.Stdin = oldStdin })
 			}
 
-			res, err := links.Construct(targetPath, linkPath, models.LinkFile)
+			res, err := links.Construct(targetPath, linkPath, false)
 
 			if (err != nil) != tc.expected.err {
 				t.Errorf("expected error: %v, got: %v", tc.expected.err, err)

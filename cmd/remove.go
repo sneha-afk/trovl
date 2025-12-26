@@ -39,11 +39,7 @@ For example, to remove a symbolic link at home to a .vimrc:
 The target file will remain untouched, and this command will NOT remove any file that
 is not a symbolic link.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		symlink, err := CleanLink(args[0])
-		if err != nil {
-			log.Fatalln("[ERROR] Remove: invalid path (symlink)", err)
-		}
-
+		symlink := args[0]
 		if err := links.RemoveByPath(symlink); err != nil {
 			log.Fatalln(err)
 		}
