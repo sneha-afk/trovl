@@ -22,16 +22,11 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
-	"maps"
-	"os"
-	"runtime"
 
 	"github.com/sneha-afk/trovl/internal/links"
-	"github.com/sneha-afk/trovl/internal/models"
+	"github.com/sneha-afk/trovl/internal/manifests"
 	"github.com/spf13/cobra"
 )
 
@@ -40,69 +35,6 @@ var defaultFiles = []string{
 	".trovl",
 	"trovl.json",
 	".trovl.json",
-}
-
-func ApplyManifest(manifestFilePath string) {
-	allPlatforms := make(map[string]struct{})
-	allPlatforms["windows"] = struct{}{}
-	allPlatforms["linux"] = struct{}{}
-	allPlatforms["darwin"] = struct{}{}
-
-	manifestFile, err := os.ReadFile(manifestFilePath)
-	if err != nil {
-		log.Fatalf("[ERROR] Apply: could not read manifest file: %v\n", err)
-	}
-
-	var manifest models.Manifest
-	if err := json.Unmarshal(manifestFile, &manifest); err != nil {
-		log.Fatalf("[ERROR] Apply: could not unmarshal manifest: %v\n", err)
-	}
-	manifest.FillDefaults()
-
-	for _, manifestLink := range manifest.Links {
-		platformsUsingSpecifiedLink := make(map[string]struct{})
-		platformUsingOverrides := make(map[string]string)
-
-		// 1. Separate out platform overrides from the "platforms"
-		for _, plat := range manifestLink.Platforms {
-			if plat == "all" {
-				platformsUsingSpecifiedLink = maps.Clone(allPlatforms)
-				break
-			}
-			platformsUsingSpecifiedLink[plat] = struct{}{}
-		}
-
-		for _, po := range manifestLink.PlatformOverrides {
-			if _, ok := platformsUsingSpecifiedLink[po.Platform]; !ok {
-				delete(platformsUsingSpecifiedLink, po.Platform)
-				platformUsingOverrides[po.Platform] = po.Link
-			}
-		}
-
-		// 2. Detect current OS and then carry out the links
-		var linkToUse string
-		if _, ok := platformsUsingSpecifiedLink[runtime.GOOS]; ok {
-			linkToUse = manifestLink.Link
-		} else {
-			linkToUse = platformUsingOverrides[runtime.GOOS]
-		}
-
-		linkSpec, err := links.Construct(manifestLink.Target, linkToUse, manifestLink.Relative)
-		if errors.Is(err, links.ErrDeclinedOverwrite) {
-			continue
-		}
-		if err != nil {
-			log.Fatalf("[ERROR] Apply: could not construct link: %v", err)
-		}
-		if err := links.Add(linkSpec); err != nil {
-			log.Fatalf("[ERROR] Apply: could not add link: %v", err)
-		}
-
-		if GlobalState.Verbose {
-			log.Printf("[INFO] Add: created link from %v -> %v\n", linkToUse, manifestLink.Target)
-		}
-
-	}
 }
 
 // applyCmd represents the apply command
@@ -115,7 +47,11 @@ var applyCmd = &cobra.Command{
 
 		if 0 < len(args) {
 			for _, manifestFilePath := range args {
-				ApplyManifest(manifestFilePath)
+				m, err := manifests.New(manifestFilePath)
+				if err != nil {
+					log.Fatalf("[ERROR] Apply: could not read manifest file: %v\n", err)
+				}
+				m.Apply(GlobalState.Verbose)
 			}
 		} else {
 			for _, path := range defaultFiles {
@@ -124,7 +60,11 @@ var applyCmd = &cobra.Command{
 					continue
 				}
 
-				ApplyManifest(path)
+				m, err := manifests.New(path)
+				if err != nil {
+					log.Fatalf("[ERROR] Apply: could not read manifest file: %v\n", err)
+				}
+				m.Apply(GlobalState.Verbose)
 				break
 			}
 		}

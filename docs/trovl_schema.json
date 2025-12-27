@@ -78,26 +78,25 @@
                 },
 
                 "platform_overrides": {
-                    "type": "array",
-                    "description": "Alternate destination paths for platforms not covered by `platforms`.",
-                    "items": { "$ref": "#/$defs/platformOverride" },
-                    "uniqueItems": true,
-                    "default": []
+                    "type": "object",
+                    "description": "Per-platform destination overrides keyed by platform.",
+                    "default": {},
+                    "propertyNames": {
+                        "$ref": "#/$defs/platform"
+                    },
+                    "additionalProperties": {
+                        "$ref": "#/$defs/platformOverride"
+                    }
                 }
             }
         },
 
         "platformOverride": {
             "type": "object",
-            "required": ["platform", "link"],
+            "required": ["link"],
             "additionalProperties": false,
 
             "properties": {
-                "platform": {
-                    "$ref": "#/$defs/platform",
-                    "description": "Platform for which this override applies."
-                },
-
                 "link": {
                     "type": "string",
                     "minLength": 1,
