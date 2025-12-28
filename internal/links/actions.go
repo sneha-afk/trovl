@@ -14,6 +14,11 @@ import (
 
 var ErrDeclinedOverwrite = errors.New("user declined overwriting existing file, no action taken")
 
+type ConstructOptions struct {
+	OverwriteForceYes bool
+	OverwriteForceNo  bool
+}
+
 // ValidatePath checks if a file at the given path exists and is openable.
 func ValidatePath(path string) (bool, error) {
 	file, err := os.Open(path)
@@ -83,7 +88,7 @@ func CleanLink(raw string, useRelative bool) (string, error) {
 }
 
 // Construct a Link type and validate the target file exists.
-func Construct(targetPath, symlinkPath string, useRelative bool) (models.Link, error) {
+func Construct(targetPath, symlinkPath string, useRelative bool, opts *ConstructOptions) (models.Link, error) {
 	targetPath, err := CleanLink(targetPath, useRelative)
 	if err != nil {
 		return models.Link{}, fmt.Errorf("invalid path (target): %v", err)
@@ -116,20 +121,29 @@ func Construct(targetPath, symlinkPath string, useRelative bool) (models.Link, e
 	targetFile.Close()
 
 	if valid, err := ValidatePath(symlinkPath); valid || err == nil {
-		fmt.Printf("[WARN] Construct: file %v already exists, should it be overwritten? [y/N]: ", symlinkPath)
-		var input = 'n'
-		_, err := fmt.Scanf("%c\n", &input)
-		if err != nil {
-			return models.Link{}, fmt.Errorf("could not read input, no action taken: %v", err)
+		shouldOverwrite := false
+
+		if opts != nil && opts.OverwriteForceYes {
+			shouldOverwrite = true
+		} else if opts != nil && opts.OverwriteForceNo {
+			shouldOverwrite = false
+		} else {
+			// Ask from stdin
+			fmt.Printf("[WARN] Construct: file %v already exists, should it be overwritten? [y/N]: ", symlinkPath)
+			var input = 'n'
+			if _, err := fmt.Scanf("%c\n", &input); err != nil {
+				return models.Link{}, fmt.Errorf("could not read input, no action taken: %v", err)
+			}
+			shouldOverwrite = unicode.ToLower(input) == 'y'
 		}
 
-		if unicode.ToLower(input) == 'y' {
-			fmt.Printf("[INFO] Construct: user accepted overwriting existing file, continuing\n")
+		if shouldOverwrite {
+			fmt.Printf("[INFO] Construct: overwriting existing file\n")
 			if err := os.Remove(symlinkPath); err != nil {
-				return models.Link{}, fmt.Errorf("could not deleting existing file: %v", err)
+				return models.Link{}, fmt.Errorf("could not delete existing file: %v", err)
 			}
 		} else {
-			fmt.Printf("[INFO] Construct: user declined overwriting existing file, continuing\n")
+			fmt.Printf("[INFO] Construct: declined to overwrite existing file\n")
 			return models.Link{}, ErrDeclinedOverwrite
 		}
 	}

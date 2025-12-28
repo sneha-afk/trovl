@@ -121,7 +121,7 @@ func TestAdd(t *testing.T) {
 				t.Cleanup(func() { os.Stdin = oldStdin })
 			}
 
-			res, err := links.Construct(targetPath, linkPath, false)
+			res, err := links.Construct(targetPath, linkPath, false, nil)
 
 			if (err != nil) != tc.expected.err {
 				t.Errorf("expected error: %v, got: %v", tc.expected.err, err)

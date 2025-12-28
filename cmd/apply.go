@@ -37,6 +37,11 @@ var defaultFiles = []string{
 	".trovl.json",
 }
 
+var (
+	applyOverwriteYes bool
+	applyOverwriteNo  bool
+)
+
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
 	Use:   "apply",
@@ -51,7 +56,10 @@ var applyCmd = &cobra.Command{
 				if err != nil {
 					log.Fatalf("[ERROR] Apply: could not read manifest file: %v\n", err)
 				}
-				m.Apply(GlobalState.Verbose)
+				m.Apply(GlobalState.Verbose, &links.ConstructOptions{
+					OverwriteForceYes: applyOverwriteYes,
+					OverwriteForceNo:  applyOverwriteNo,
+				})
 			}
 		} else {
 			for _, path := range defaultFiles {
@@ -64,7 +72,10 @@ var applyCmd = &cobra.Command{
 				if err != nil {
 					log.Fatalf("[ERROR] Apply: could not read manifest file: %v\n", err)
 				}
-				m.Apply(GlobalState.Verbose)
+				m.Apply(GlobalState.Verbose, &links.ConstructOptions{
+					OverwriteForceYes: applyOverwriteYes,
+					OverwriteForceNo:  applyOverwriteNo,
+				})
 				break
 			}
 		}
@@ -74,13 +85,6 @@ var applyCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(applyCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// applyCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// applyCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	applyCmd.Flags().BoolVar(&addOverwriteYes, "overwrite", false, "overwrite any existing symlinks")
+	applyCmd.Flags().BoolVar(&addOverwriteNo, "no-overwrite", false, "do not overwrite any existing symlinks")
 }

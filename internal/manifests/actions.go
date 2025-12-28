@@ -57,7 +57,7 @@ func (m *Manifest) FillDefaults() {
 	}
 }
 
-func (m *Manifest) Apply(verbose bool) error {
+func (m *Manifest) Apply(verbose bool, constructOpts *links.ConstructOptions) error {
 	for _, manifestLink := range m.Links {
 		// 1. Separate platform using the top-level (default) symlink vs. overrides
 		platformUsingSpec := mapset.NewSet[string]()
@@ -83,7 +83,8 @@ func (m *Manifest) Apply(verbose bool) error {
 			linkToUse = manifestLink.PlatformOverrides[runtime.GOOS].Link
 		}
 
-		linkSpec, err := links.Construct(manifestLink.Target, linkToUse, manifestLink.Relative)
+		// TODO: allow granular ovewrites?
+		linkSpec, err := links.Construct(manifestLink.Target, linkToUse, manifestLink.Relative, constructOpts)
 		if errors.Is(err, links.ErrDeclinedOverwrite) {
 			continue
 		}

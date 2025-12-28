@@ -29,7 +29,9 @@ import (
 )
 
 var (
-	useRelative bool
+	useRelative     bool
+	addOverwriteYes bool
+	addOverwriteNo  bool
 )
 
 // addCmd represents the add command
@@ -44,7 +46,10 @@ For example, to create a link from a dotfiles/.vimrc to .vimrc at home:
 		target := args[0]
 		symlink := args[1]
 
-		link, err := links.Construct(target, symlink, useRelative)
+		link, err := links.Construct(target, symlink, useRelative, &links.ConstructOptions{
+			OverwriteForceYes: addOverwriteYes,
+			OverwriteForceNo:  addOverwriteNo,
+		})
 		if err != nil {
 			log.Fatalf("[ERROR] Add: could not construct symlink: %v", err)
 		}
@@ -65,4 +70,6 @@ func init() {
 	rootCmd.AddCommand(addCmd)
 
 	addCmd.Flags().BoolVar(&useRelative, "relative", false, "retain relative paths to target")
+	addCmd.Flags().BoolVar(&addOverwriteYes, "overwrite", false, "overwrite any existing symlinks")
+	addCmd.Flags().BoolVar(&addOverwriteNo, "no-overwrite", false, "do not overwrite any existing symlinks")
 }
