@@ -7,9 +7,11 @@ import (
 	"os"
 	"runtime"
 	"slices"
+	"strings"
 
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/sneha-afk/trovl/internal/links"
+	"github.com/sneha-afk/trovl/internal/models"
 )
 
 type PlatformOverride struct {
@@ -28,10 +30,14 @@ type Manifest struct {
 	Links []ManifestLink `json:"links"`
 }
 
-var allSupportedPlatforms []string = []string{
-	"windows",
-	"linux",
-	"darwin",
+var allSupportedPlatforms mapset.Set[string] = mapset.NewSet("windows", "linux", "darwin")
+
+func IsSupportedPlatform(platform string) bool {
+	platform = strings.ToLower(platform)
+	if platform == "all" {
+		return true
+	}
+	return allSupportedPlatforms.Contains(platform)
 }
 
 func New(path string) (*Manifest, error) {
@@ -57,45 +63,89 @@ func (m *Manifest) FillDefaults() {
 	}
 }
 
-func (m *Manifest) Apply(verbose bool, constructOpts *links.ConstructOptions) error {
-	for _, manifestLink := range m.Links {
-		// 1. Separate platform using the top-level (default) symlink vs. overrides
-		platformUsingSpec := mapset.NewSet[string]()
+func (m *Manifest) UnmarshalJSON(data []byte) error {
+	type manifestAlias Manifest
 
-		if slices.Contains(manifestLink.Platforms, "all") {
-			platformUsingSpec.Append(allSupportedPlatforms...)
-		} else {
-			platformUsingSpec.Append(manifestLink.Platforms...)
-		}
-
-		keys := make([]string, 0, len(manifestLink.PlatformOverrides))
-		for k := range manifestLink.PlatformOverrides {
-			keys = append(keys, k)
-		}
-		platformUsingSpec.RemoveAll(keys...)
-
-		// 2. Detect current OS and carry out links
-		var linkToUse string
-		if platformUsingSpec.Contains(runtime.GOOS) {
-
-			linkToUse = manifestLink.Link
-		} else {
-			linkToUse = manifestLink.PlatformOverrides[runtime.GOOS].Link
-		}
-
-		// TODO: allow granular ovewrites?
-		linkSpec, err := links.Construct(manifestLink.Target, linkToUse, manifestLink.Relative, constructOpts)
-		if errors.Is(err, links.ErrDeclinedOverwrite) {
-			continue
-		}
-		if err != nil {
-			return fmt.Errorf("could not construct link: %v", err)
-		}
-		if err := links.Add(linkSpec); err != nil {
-			return fmt.Errorf("could not add link: %v", err)
-		}
-
-		// TODO: verbosity here
+	var temp manifestAlias
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
 	}
+
+	for i := range temp.Links {
+		link := &temp.Links[i]
+
+		if len(link.Platforms) == 0 {
+			link.Platforms = []string{"all"}
+		}
+
+		if link.PlatformOverrides == nil {
+			link.PlatformOverrides = map[string]PlatformOverride{}
+		}
+
+		if link.Target == "" {
+			return fmt.Errorf("links[%d]: missing target", i)
+		}
+		if link.Link == "" {
+			return fmt.Errorf("links[%d]: missing link", i)
+		}
+
+		if slices.Contains(link.Platforms, "all") && len(link.Platforms) > 1 {
+			return fmt.Errorf("links[%d]: 'all' cannot be combined with other platforms", i)
+		}
+
+		seen := map[string]struct{}{}
+		for _, plat := range link.Platforms {
+			if !IsSupportedPlatform(plat) {
+				return fmt.Errorf("links[%d]: unsupported platform %q", i, plat)
+			}
+			if _, ok := seen[plat]; ok {
+				return fmt.Errorf("links[%d]: duplicate platform %q", i, plat)
+			}
+			seen[plat] = struct{}{}
+		}
+
+		for plat, over := range link.PlatformOverrides {
+			if !IsSupportedPlatform(plat) {
+				return fmt.Errorf("links[%d] (override): unsupported platform %q", i, plat)
+			}
+			if over.Link == "" {
+				return fmt.Errorf("links[%d]: override %q missing link", i, plat)
+			}
+		}
+	}
+
+	*m = Manifest(temp)
+	return nil
+}
+
+func (m *Manifest) Apply(verbose bool, constructOpts *links.ConstructOptions) error {
+	var constructed models.Link
+	var err error
+	var linkToUse string
+
+	for i := range m.Links {
+		link := &m.Links[i]
+
+		if override, ok := link.PlatformOverrides[runtime.GOOS]; ok {
+			// 1. If an override exists for this platform, it always wins
+			linkToUse = override.Link
+		} else {
+			// 2. Determine whether this link applies to the current platform
+			if slices.Contains(link.Platforms, "all") || slices.Contains(link.Platforms, runtime.GOOS) {
+				linkToUse = link.Link
+			} else {
+				return fmt.Errorf("links[%d]: link does not apply to platform %q", i, runtime.GOOS)
+			}
+		}
+
+		constructed, err = links.Construct(link.Target, linkToUse, link.Relative, constructOpts)
+		if err != nil && !errors.Is(err, links.ErrDeclinedOverwrite) {
+			return fmt.Errorf("links[%d]: %w", i, err)
+		}
+		if err := links.Add(constructed); err != nil {
+			return fmt.Errorf("links[i] %w", err)
+		}
+	}
+
 	return nil
 }
