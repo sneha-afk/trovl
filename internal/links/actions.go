@@ -10,6 +10,7 @@ import (
 	"unicode"
 
 	"github.com/sneha-afk/trovl/internal/models"
+	"github.com/sneha-afk/trovl/internal/state"
 )
 
 var ErrDeclinedOverwrite = errors.New("user declined overwriting existing file, no action taken")
@@ -88,12 +89,12 @@ func CleanLink(raw string, useRelative bool) (string, error) {
 }
 
 // Construct a Link type and validate the target file exists.
-func Construct(targetPath, symlinkPath string, useRelative bool, opts *ConstructOptions) (models.Link, error) {
-	targetPath, err := CleanLink(targetPath, useRelative)
+func Construct(state *state.TrovlState, targetPath, symlinkPath string) (models.Link, error) {
+	targetPath, err := CleanLink(targetPath, state.Options.UseRelative)
 	if err != nil {
 		return models.Link{}, fmt.Errorf("invalid path (target): %v", err)
 	}
-	symlinkPath, err = CleanLink(symlinkPath, useRelative)
+	symlinkPath, err = CleanLink(symlinkPath, state.Options.UseRelative)
 	if err != nil {
 		return models.Link{}, fmt.Errorf("invalid path (symlink): %v", err)
 	}
@@ -123,13 +124,13 @@ func Construct(targetPath, symlinkPath string, useRelative bool, opts *Construct
 	if valid, err := ValidatePath(symlinkPath); valid || err == nil {
 		shouldOverwrite := false
 
-		if opts != nil && opts.OverwriteForceYes {
+		if state.Options.OverwriteYes {
 			shouldOverwrite = true
-		} else if opts != nil && opts.OverwriteForceNo {
+		} else if state.Options.OverwriteNo {
 			shouldOverwrite = false
 		} else {
-			// Ask from stdin
-			fmt.Printf("[WARN] Construct: file %v already exists, should it be overwritten? [y/N]: ", symlinkPath)
+			state.Logger.Warn(fmt.Sprintf("Symlink %v already exists, should it be overwritten? [y/N]", symlinkPath))
+			fmt.Printf("> ")
 			var input = 'n'
 			if _, err := fmt.Scanf("%c\n", &input); err != nil {
 				return models.Link{}, fmt.Errorf("could not read input, no action taken: %v", err)
@@ -138,12 +139,12 @@ func Construct(targetPath, symlinkPath string, useRelative bool, opts *Construct
 		}
 
 		if shouldOverwrite {
-			fmt.Printf("[INFO] Construct: overwriting existing file\n")
+			state.Logger.Warn("Overwriting existing file...")
 			if err := os.Remove(symlinkPath); err != nil {
 				return models.Link{}, fmt.Errorf("could not delete existing file: %v", err)
 			}
 		} else {
-			fmt.Printf("[INFO] Construct: declined to overwrite existing file\n")
+			state.Logger.Warn("Declined overwriting existing file, no action taken")
 			return models.Link{}, ErrDeclinedOverwrite
 		}
 	}
@@ -158,7 +159,7 @@ func Construct(targetPath, symlinkPath string, useRelative bool, opts *Construct
 // Add a symlink specified by the Link class.
 // Wrapper around os.Symlink which is already OS-agnostic
 // Precondition: there is no existing file where the symlink was specified
-func Add(link models.Link) error {
+func Add(link *models.Link) error {
 	err := os.Symlink(link.Target, link.LinkMount)
 	return err
 }

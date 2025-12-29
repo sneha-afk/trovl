@@ -1,29 +1,7 @@
-/*
-Copyright © 2025 Sneha De <55897319+sneha-afk@users.noreply.github.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
 package cmd
 
 import (
-	"fmt"
-	"log"
+	"os"
 
 	"github.com/sneha-afk/trovl/internal/links"
 	"github.com/sneha-afk/trovl/internal/manifests"
@@ -37,54 +15,46 @@ var defaultFiles = []string{
 	".trovl.json",
 }
 
-var (
-	applyOverwriteYes bool
-	applyOverwriteNo  bool
-)
-
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Applies a link list specified by schema.",
 	Long:  `Applies a link list specified by schema to bulk add links or fix as needed.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("apply called")
-
-		if 0 < len(args) {
-			for _, manifestFilePath := range args {
-				m, err := manifests.New(manifestFilePath)
-				if err != nil {
-					log.Fatalf("[ERROR] Apply: could not read manifest file: %v\n", err)
-				}
-				m.Apply(GlobalState.Verbose, &links.ConstructOptions{
-					OverwriteForceYes: applyOverwriteYes,
-					OverwriteForceNo:  applyOverwriteNo,
-				})
-			}
-		} else {
+		// Find one of the default filepaths to apply
+		if len(args) <= 0 {
 			for _, path := range defaultFiles {
 				ok, err := links.ValidatePath(path)
 				if !ok || err != nil {
 					continue
 				}
 
-				m, err := manifests.New(path)
-				if err != nil {
-					log.Fatalf("[ERROR] Apply: could not read manifest file: %v\n", err)
-				}
-				m.Apply(GlobalState.Verbose, &links.ConstructOptions{
-					OverwriteForceYes: applyOverwriteYes,
-					OverwriteForceNo:  applyOverwriteNo,
-				})
+				args = append(args, path)
 				break
 			}
 		}
+
+		for _, path := range args {
+			m, err := manifests.New(path)
+			if err != nil {
+				State.Logger.Error("Could not read manifest file", "error", err)
+				os.Exit(1)
+			}
+
+			if err := m.Apply(State); err != nil {
+				State.Logger.Error("Could not apply manifest file", "error", err)
+				os.Exit(1)
+			}
+		}
+
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(applyCmd)
 
-	applyCmd.Flags().BoolVar(&addOverwriteYes, "overwrite", false, "overwrite any existing symlinks")
-	applyCmd.Flags().BoolVar(&addOverwriteNo, "no-overwrite", false, "do not overwrite any existing symlinks")
+	applyCmd.Flags().BoolVar(&cfg.OverwriteYes, "overwrite", false, "overwrite any existing symlinks")
+	applyCmd.Flags().BoolVar(&cfg.OverwriteNo, "no-overwrite", false, "do not overwrite any existing symlinks")
+
+	applyCmd.MarkFlagsMutuallyExclusive("overwrite", "no-overwrite")
 }

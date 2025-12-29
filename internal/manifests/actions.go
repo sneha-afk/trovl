@@ -1,3 +1,7 @@
+/*
+Package manifests defines a link manifest that is used for bulk operations.
+Pretty much the exact reason why this project exists.
+*/
 package manifests
 
 import (
@@ -12,6 +16,7 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/sneha-afk/trovl/internal/links"
 	"github.com/sneha-afk/trovl/internal/models"
+	"github.com/sneha-afk/trovl/internal/state"
 )
 
 type PlatformOverride struct {
@@ -64,6 +69,7 @@ func (m *Manifest) FillDefaults() {
 }
 
 func (m *Manifest) UnmarshalJSON(data []byte) error {
+	// alias ensures no infinte loop since the alias has nothing defined on it
 	type manifestAlias Manifest
 
 	var temp manifestAlias
@@ -118,10 +124,11 @@ func (m *Manifest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m *Manifest) Apply(verbose bool, constructOpts *links.ConstructOptions) error {
+func (m *Manifest) Apply(state *state.TrovlState) error {
 	var constructed models.Link
 	var err error
 	var linkToUse string
+	var numLinks = len(m.Links)
 
 	for i := range m.Links {
 		link := &m.Links[i]
@@ -138,12 +145,16 @@ func (m *Manifest) Apply(verbose bool, constructOpts *links.ConstructOptions) er
 			}
 		}
 
-		constructed, err = links.Construct(link.Target, linkToUse, link.Relative, constructOpts)
+		constructed, err = links.Construct(state, link.Target, linkToUse)
 		if err != nil && !errors.Is(err, links.ErrDeclinedOverwrite) {
 			return fmt.Errorf("links[%d]: %w", i, err)
 		}
-		if err := links.Add(constructed); err != nil {
+		if err := links.Add(&constructed); err != nil {
 			return fmt.Errorf("links[i] %w", err)
+		}
+
+		if state.Verbose() {
+			state.Logger.Info(fmt.Sprintf("Successfully added symlink [%v/%v]", i, numLinks), "link", linkToUse, "target", link.Target)
 		}
 	}
 

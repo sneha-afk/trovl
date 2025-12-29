@@ -7,7 +7,12 @@ import (
 	"testing"
 
 	"github.com/sneha-afk/trovl/internal/links"
+	"github.com/sneha-afk/trovl/internal/state"
 )
+
+func TestMain(m *testing.M) {
+	os.Exit(m.Run())
+}
 
 func TestValidatePath(t *testing.T) {
 	tmp := t.TempDir()
@@ -104,24 +109,15 @@ func TestAdd(t *testing.T) {
 				os.Symlink(targetPath, linkPath)
 			}
 
-			// create a pipe to simulate stdin/out
-			// newlines in this input to make sure it goes through
-			if tc.userInput != "" {
-				oldStdin := os.Stdin
-				r, w, err := os.Pipe()
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				os.Stdin = r
-
-				w.WriteString(tc.userInput)
-				w.Close()
-
-				t.Cleanup(func() { os.Stdin = oldStdin })
+			state := state.DefaultState()
+			switch tc.userInput {
+			case "y\n":
+				state.Options.OverwriteYes = true
+			case "n\n":
+				state.Options.OverwriteNo = true
 			}
 
-			res, err := links.Construct(targetPath, linkPath, false, nil)
+			res, err := links.Construct(state, targetPath, linkPath)
 
 			if (err != nil) != tc.expected.err {
 				t.Errorf("expected error: %v, got: %v", tc.expected.err, err)
@@ -140,7 +136,7 @@ func TestAdd(t *testing.T) {
 				}
 			}
 
-			err = links.Add(res)
+			err = links.Add(&res)
 			if (err != nil) != tc.expected.err {
 				t.Errorf("expected error: %v, got: %v", tc.expected.err, err)
 			}

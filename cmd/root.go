@@ -1,30 +1,19 @@
 /*
-Copyright © 2025 Sneha De <55897319+sneha-afk@users.noreply.github.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+Package cmd is the central CobraCLI aspects of trovl.
 */
 package cmd
 
 import (
+	"log/slog"
 	"os"
 
+	"github.com/sneha-afk/trovl/internal/state"
 	"github.com/spf13/cobra"
+)
+
+var (
+	cfg   = &state.TrovlOptions{}
+	State *state.TrovlState
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -35,9 +24,10 @@ var rootCmd = &cobra.Command{
 It features configurable paths for files and directories that vary in location depending on the system,
 and true-symlinking when possible.
 	`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		State = state.New(cfg)
+		slog.SetDefault(State.Logger)
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -49,21 +39,8 @@ func Execute() {
 	}
 }
 
-type Globals struct {
-	Verbose bool
-}
-
-var GlobalState Globals
-
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.trovl.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&GlobalState.Verbose, "verbose", "v", false, "have verbose outputs for actions taken")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	State = state.DefaultState()
+	rootCmd.PersistentFlags().BoolVarP(&cfg.Verbose, "verbose", "v", false, "have verbose outputs for actions taken")
+	rootCmd.PersistentFlags().BoolVar(&cfg.Debug, "debug", false, "show debug info")
 }

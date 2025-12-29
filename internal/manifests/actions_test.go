@@ -7,10 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sneha-afk/trovl/internal/links"
+	"github.com/sneha-afk/trovl/internal/state"
 )
 
 var differentOS string
+var teststate *state.TrovlState
 
 var (
 	validSingleLink              = `{"links":[{"target":"actual_file","link":"test_symlink"}]}`
@@ -50,6 +51,7 @@ func TestMain(m *testing.M) {
 	if differentOS == "" {
 		panic("couldn't get a different os for manifests tests")
 	}
+	teststate = state.DefaultState()
 	os.Exit(m.Run())
 }
 
@@ -260,6 +262,7 @@ func TestApply(t *testing.T) {
 		name     string
 		content  string
 		wantErr  bool
+		state    *state.TrovlState
 		setup    func(string)
 		validate func(*testing.T, string)
 	}{
@@ -366,6 +369,11 @@ func TestApply(t *testing.T) {
 			name:    "relative link",
 			content: relativeLink,
 			wantErr: false,
+			state: &state.TrovlState{
+				Options: &state.TrovlOptions{
+					UseRelative: true,
+				},
+			},
 			setup: func(tmpDir string) {
 				os.WriteFile(filepath.Join(tmpDir, "actual_file"), []byte("content"), 0644)
 			},
@@ -533,10 +541,11 @@ func TestApply(t *testing.T) {
 			os.Chdir(tmpDir)
 			defer os.Chdir(oldWd)
 
-			err = m.Apply(true, &links.ConstructOptions{
-				OverwriteForceYes: false,
-				OverwriteForceNo:  false,
-			})
+			if tt.state == nil {
+				err = m.Apply(teststate)
+			} else {
+				err = m.Apply(tt.state)
+			}
 
 			if tt.wantErr {
 				if err == nil {
