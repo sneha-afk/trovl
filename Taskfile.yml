@@ -1,0 +1,103 @@
+# trovl/Taskfile.yml
+
+version: "3"
+
+vars:
+    BINARY_NAME: trovl
+    DEV_LD_FLAGS: ""
+    RELEASE_LD_FLAGS: -s -w
+    VERSION:
+        sh: git describe --tags --dirty --always 2>/dev/null || echo dev
+    RELEASE_TARGETS:
+        - "windows amd64 .exe"
+        - "windows arm64 .exe"
+        - "linux amd64"
+        - "linux arm64"
+        - "darwin amd64"
+        - "darwin arm64"
+
+tasks:
+    default:
+        desc: Show available tasks
+        cmds:
+            - task --list
+
+    build:
+        desc: Build for the current operating system
+        cmds:
+            - go build -ldflags="{{.DEV_LD_FLAGS}}" -o {{.BINARY_NAME}}{{exeExt}} .
+    fmt:
+        desc: Format code
+        cmds:
+            - go fmt ./...
+
+    test:
+        desc: Run tests
+        cmds:
+            - go test ./... {{.CLI_ARGS}}
+
+    test-coverage:
+        desc: Run tests with coverage report
+        cmds:
+            - go test -coverprofile=coverage.out ./...
+            - go tool cover -html=coverage.out -o coverage.html
+            - echo "Coverage report generated at coverage.html"
+
+    check:
+        desc: Run all checks (fmt, lint, test)
+        cmds:
+            - task: fmt
+            - task: test
+
+    install:
+        desc: Install to GOBIN (usually ~/go/bin)
+        cmds:
+            - go install -ldflags="{{.RELEASE_LD_FLAGS}}" .
+
+    uninstall:
+        desc: Remove from GOBIN
+        cmds:
+            - rm -f $(go env GOPATH)/bin/{{.BINARY_NAME}}{{exeExt}}
+
+    clean:
+        desc: Clean up build artifacts
+        cmds:
+            - rm -rf dist/
+            - rm -f {{.BINARY_NAME}}
+            - rm -f {{.BINARY_NAME}}.exe
+            - rm -f coverage.out coverage.html
+
+    clean-all:
+        desc: Clean everything including caches
+        cmds:
+            - task: clean
+            - go clean -cache -testcache -modcache
+
+    release:
+        desc: Build binaries for all platforms with checksums
+        cmds:
+            - task: clean
+            - mkdir -p dist
+            - |
+                {{- $flags := .RELEASE_LD_FLAGS -}}
+                {{- $bin := .BINARY_NAME -}}
+                {{- $ver := .VERSION -}}
+                {{range $i, $target := .RELEASE_TARGETS}}
+                    {{ $parts := splitList " " $target }}
+                    {{ $GOOS := index $parts 0 }}
+                    {{ $GOARCH := index $parts 1 }}
+                    {{ $EXT := "" }}
+                    {{if eq (len $parts) 3}} {{ $EXT = index $parts 2 }} {{end}}
+                    echo "→ Building {{$GOOS}}/{{$GOARCH}}"
+                    CGO_ENABLED=0 GOOS={{$GOOS}} GOARCH={{$GOARCH}} go build -ldflags "{{$flags}} -X main.version={{$ver}}" -o dist/{{$bin}}_{{$GOOS}}_{{$GOARCH}}{{$EXT}} .
+                {{end}}
+            - task: release:checksums
+            - echo "Release {{.VERSION}} builds complete"
+
+    release:checksums:
+        desc: Generate SHA-256 checksums
+        cmds:
+            - cmd: sha256sum dist/* > dist/checksums.txt
+              ignore_error: true
+            - cmd: shasum -a 256 dist/* > dist/checksums.txt
+              ignore_error: true
