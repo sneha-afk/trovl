@@ -43,4 +43,7 @@ func init() {
 	State = state.DefaultState()
 	rootCmd.PersistentFlags().BoolVarP(&cfg.Verbose, "verbose", "v", false, "have verbose outputs for actions taken")
 	rootCmd.PersistentFlags().BoolVar(&cfg.Debug, "debug", false, "show debug info")
+
+	rootCmd.Version = "v0.2-dev"
+	rootCmd.SetVersionTemplate("{{.Version}}\n")
 }
