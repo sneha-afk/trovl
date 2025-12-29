@@ -6,8 +6,6 @@ vars:
     BINARY_NAME: trovl
     DEV_LD_FLAGS: ""
     RELEASE_LD_FLAGS: -s -w
-    VERSION:
-        sh: git describe --tags --dirty --always 2>/dev/null || echo dev
     RELEASE_TARGETS:
         - "windows amd64 .exe"
         - "windows arm64 .exe"
@@ -74,30 +72,6 @@ tasks:
             - go clean -cache -testcache -modcache
 
     release:
-        desc: Build binaries for all platforms with checksums
+        desc: Build release binaries
         cmds:
-            - task: clean
-            - mkdir -p dist
-            - |
-                {{- $flags := .RELEASE_LD_FLAGS -}}
-                {{- $bin := .BINARY_NAME -}}
-                {{- $ver := .VERSION -}}
-                {{range $i, $target := .RELEASE_TARGETS}}
-                    {{ $parts := splitList " " $target }}
-                    {{ $GOOS := index $parts 0 }}
-                    {{ $GOARCH := index $parts 1 }}
-                    {{ $EXT := "" }}
-                    {{if eq (len $parts) 3}} {{ $EXT = index $parts 2 }} {{end}}
-                    echo "→ Building {{$GOOS}}/{{$GOARCH}}"
-                    CGO_ENABLED=0 GOOS={{$GOOS}} GOARCH={{$GOARCH}} go build -ldflags "{{$flags}} -X main.version={{$ver}}" -o dist/{{$bin}}_{{$GOOS}}_{{$GOARCH}}{{$EXT}} .
-                {{end}}
-            - task: release:checksums
-            - echo "Release {{.VERSION}} builds complete"
-
-    release:checksums:
-        desc: Generate SHA-256 checksums
-        cmds:
-            - cmd: sha256sum dist/* > dist/checksums.txt
-              ignore_error: true
-            - cmd: shasum -a 256 dist/* > dist/checksums.txt
-              ignore_error: true
+            - if [ "$(uname -s)" = "Windows_NT" ]; then powershell -ExecutionPolicy Bypass -File ./scripts/release_binaries.ps1; else ./scripts/release_binaries.sh; fi
