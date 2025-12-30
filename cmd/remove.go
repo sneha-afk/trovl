@@ -9,27 +9,25 @@ import (
 
 // removeCmd represents the remove command
 var removeCmd = &cobra.Command{
-	Use:   "remove",
+	Use:   "remove <symlink> [more_symlinks]",
 	Short: "Removes a specified symlink while keeping the target file as-is.",
-	Long: `To remove a symlink, specify it:
-  trovl remove <symlink>
-For example, to remove a symbolic link at home to a .vimrc:
-  trovl remove ~/.vimrc
-The target file will remain untouched, and this command will NOT remove any file that
-is not a symbolic link.`,
+	Long: `Removes symlinks while keeping the target file untouched. Validates any argument passed
+	in as truly being a symlink to prevent data loss.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		symlink := args[0]
-		if err := links.RemoveByPath(symlink); err != nil {
-			State.Logger.Error("Could not remove symlink", "error", err)
-			os.Exit(1)
-		}
+		for _, symlink := range args {
+			if err := links.RemoveByPath(symlink); err != nil {
+				State.Logger.Error("Could not remove symlink", "error", err)
+				os.Exit(1)
+			}
 
-		if State.Verbose() {
-			State.Logger.Info("Successfully removed symlink", "link", symlink)
+			if State.Verbose() {
+				State.Logger.Info("Successfully removed symlink", "link", symlink)
+			}
 		}
 	},
 	Args:    cobra.MinimumNArgs(1),
 	Aliases: []string{"unlink", "delete"},
+	Example: "trovl remove ~/.vimrc (where it is a symlink)",
 }
 
 func init() {

@@ -17,7 +17,7 @@ var defaultFiles = []string{
 
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
-	Use:   "apply",
+	Use:   "apply <manifest_file> [more_manifests]",
 	Short: "Applies a link list specified by schema.",
 	Long:  `Applies a link list specified by schema to bulk add links or fix as needed.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -48,6 +48,9 @@ var applyCmd = &cobra.Command{
 		}
 
 	},
+	Args:    cobra.MinimumNArgs(1),
+	Aliases: []string{"execute", "run", "do"},
+	Example: "trovl apply .trovl",
 }
 
 func init() {

@@ -9,31 +9,31 @@ import (
 
 // addCmd represents the add command
 var addCmd = &cobra.Command{
-	Use:   "add",
+	Use:   "add <target> <symlink> [target2, symlink2, ...]",
 	Short: "Adds a symlink that points to the target file",
-	Long: `To add a symlink, specify via:
-  trovl add <target> <symlink>
-For example, to create a link from a dotfiles/.vimrc to .vimrc at home:
-  trovl add ~/dotfiles/.vimrc ~/.vimrc`,
+	Long:  `When possible, add a true symlink (as in, not a junction or hard link) to a target file.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		target := args[0]
-		symlink := args[1]
+		for i := 0; i < len(args); i += 2 {
+			target := args[i]
+			symlink := args[i+1]
 
-		link, err := links.Construct(State, target, symlink)
-		if err != nil {
-			State.Logger.Error("Could not construct symlink", "error", err)
-			os.Exit(1)
+			link, err := links.Construct(State, target, symlink)
+			if err != nil {
+				State.Logger.Error("Could not construct symlink", "error", err)
+				os.Exit(1)
+			}
+
+			if err := links.Add(&link); err != nil {
+				State.Logger.Error("Failed to create link (maybe try running as admin?)", "error", err)
+				os.Exit(1)
+			}
+
+			State.Logger.Info("Successfully added symlink", "link", symlink, "target", target)
 		}
-
-		if err := links.Add(&link); err != nil {
-			State.Logger.Error("Failed to create link (maybe try running as admin?)", "error", err)
-			os.Exit(1)
-		}
-
-		State.Logger.Info("Successfully added symlink", "link", symlink, "target", target)
 	},
 	Args:    cobra.MinimumNArgs(2),
 	Aliases: []string{"link", "create"},
+	Example: "trovl add ~/dotfiles/.vimrc ~/.vimrc",
 }
 
 func init() {

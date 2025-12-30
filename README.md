@@ -1,7 +1,7 @@
 # trovl
 
 Do you find yourself wrangling symlinks across different OSes with varying syntax, positions, or otherwise pain?
-`trovl` aims to be a simple, cross-platform symlink manager with:
+`trovl` is a simple, cross-platform symlink manager with:
 - Cross-platform support: Windows, Linux, macOS in both amd/arm (64-bit systems only)
 - Override a symlink's position and name by OS
 - True symlinks when possible
@@ -22,7 +22,7 @@ Download the latest release for your platform from the [releases page](https://g
 
 For example, getting the latest `linux-amd64` build with `curl`: simply change the ending OS and architecture as needed
 ```bash
-curl -LO https://github.com/sneha-afk/trovl/releases/latest/download/trovl_linux_amd64.exe
+curl -LO https://github.com/sneha-afk/trovl/releases/latest/download/trovl_linux_amd64
 ```
 
 ## Commands
