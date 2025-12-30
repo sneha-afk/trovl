@@ -3,112 +3,115 @@ name: Release
 on:
     push:
         tags:
-            - "v*" # e.g., v1.2.3, v1.2.3-alpha
+            - "v*"
+
+env:
+    GO_VERSION: "1.25"
 
 jobs:
-    build:
-        runs-on: ${{ matrix.os }}
-        strategy:
-            matrix:
-                os: [ubuntu-latest, macos-latest, windows-latest]
-                arch: [amd64, arm64]
-
+    test:
+        name: Test
+        runs-on: ubuntu-latest
         steps:
-            - name: Checkout code
-              uses: actions/checkout@v3
+            - uses: actions/checkout@v4
 
-            - name: Set up Go
-              uses: actions/setup-go@v4
+            - uses: actions/setup-go@v5
               with:
-                  go-version: "1.25"
+                  go-version: ${{ env.GO_VERSION }}
+                  cache: true
 
-            - name: Determine version
-              id: version
-              shell: bash
-              run: |
-                  VERSION=$(git describe --tags --dirty --always || echo dev)
-                  echo "VERSION=$VERSION" >> $GITHUB_ENV
-                  echo "Determined version: $VERSION"
+            - name: Run tests
+              run: go test -v ./...
 
-            - name: Create dist folder
-              run: mkdir -p dist
+    build:
+        name: Build ${{ matrix.display_name }}-${{ matrix.arch }}
+        runs-on: ${{ matrix.runner }}
+        needs: test
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - os: linux
+                      display_name: linux
+                      arch: amd64
+                      runner: ubuntu-latest
+                    - os: linux
+                      display_name: linux
+                      arch: arm64
+                      runner: ubuntu-latest
+                    - os: darwin
+                      display_name: macos
+                      arch: amd64
+                      runner: macos-latest
+                    - os: darwin
+                      display_name: macos
+                      arch: arm64
+                      runner: macos-latest
+                    - os: windows
+                      display_name: windows
+                      arch: amd64
+                      runner: windows-latest
+                    - os: windows
+                      display_name: windows
+                      arch: arm64
+                      runner: windows-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-go@v5
+              with:
+                  go-version: ${{ env.GO_VERSION }}
+                  cache: true
 
             - name: Build binary
-              shell: bash
               run: |
-                  EXT=""
-                  if [[ "$RUNNER_OS" == "Windows" ]]; then EXT=".exe"; fi
+                  VERSION="${GITHUB_REF_NAME#v}"
+                  EXT=${{ matrix.os == 'windows' && '.exe' || '' }}
+                  BINARY="trovl$EXT"
 
-                  OS_NAME=""
-                  case "$RUNNER_OS" in
-                    "Windows") OS_NAME="windows" ;;
-                    "Linux")   OS_NAME="linux" ;;
-                    "macOS")   OS_NAME="darwin" ;;
-                  esac
+                  CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} \
+                    go build -trimpath -ldflags "-s -w -X main.version=$VERSION" -o "$BINARY" .
 
-                  OUTFILE="dist/trovl_${OS_NAME}_${{ matrix.arch }}$EXT"
-                  echo ">>> Building $OS_NAME/${{ matrix.arch }} :: $OUTFILE"
+                  ZIP_NAME="trovl_${{ matrix.display_name }}_${{ matrix.arch }}.zip"
 
-                  CGO_ENABLED=0 GOOS=$OS_NAME GOARCH=${{ matrix.arch }} \
-                    go build -ldflags "-s -w -X main.version=$VERSION" -o "$OUTFILE" .
-
-            - name: Upload binaries
-              uses: actions/upload-artifact@v4
-              with:
-                  name: trovl-${{ matrix.os }}-${{ matrix.arch }}
-                  path: dist/*
-
-    checksums:
-        runs-on: ubuntu-latest
-        needs: build
-        steps:
-            - name: Download all build artifacts
-              uses: actions/download-artifact@v4
-              with:
-                  path: artifacts
-
-            - name: Flatten all binaries into dist/
+                  if command -v zip &> /dev/null; then
+                    zip "$ZIP_NAME" "$BINARY"
+                  else
+                    7z a "$ZIP_NAME" "$BINARY"
+                  fi
               shell: bash
-              run: |
-                  mkdir -p dist
-                  find artifacts -type f -exec cp {} dist/ \;
 
-            - name: Generate SHA-256 checksums
-              shell: bash
-              run: |
-                  cd dist
-                  sha256sum * > checksums.txt || shasum -a 256 * > checksums.txt
-                  cat checksums.txt
-
-            - name: Upload checksums
-              uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v4
               with:
-                  name: trovl-checksums
-                  path: dist/checksums.txt
+                  name: trovl-${{ matrix.display_name }}-${{ matrix.arch }}
+                  path: "*.zip"
+                  retention-days: 1
+                  if-no-files-found: error
 
     release:
+        name: Create Release
         runs-on: ubuntu-latest
-        needs: [build, checksums]
+        needs: build
+        permissions:
+            contents: write
         steps:
-            - name: Checkout code
-              uses: actions/checkout@v3
-
-            - name: Download binaries and checksums
-              uses: actions/download-artifact@v4
+            - uses: actions/download-artifact@v4
               with:
-                  path: dist
+                  path: artifacts
+                  pattern: trovl-*
+                  merge-multiple: true
 
-            - name: Flatten files for release
-              shell: bash
+            - name: Generate checksums
               run: |
-                  mkdir -p dist_flat
-                  find dist -type f -exec cp {} dist_flat/ \;
+                  cd artifacts
+                  sha256sum *.zip > checksums.txt
+                  cat checksums.txt
 
-            - name: Create GitHub Release
-              uses: softprops/action-gh-release@v1
+            - uses: softprops/action-gh-release@v2
               with:
-                  tag_name: ${{ github.ref_name }}
-                  name: ${{ github.ref_name }}
-                  files: dist_flat/*
+                  files: artifacts/*
+                  generate_release_notes: true
+                  draft: false
+                  prerelease: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') }}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
