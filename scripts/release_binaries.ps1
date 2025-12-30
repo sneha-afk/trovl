@@ -27,7 +27,8 @@ foreach ($t in $Targets) {
     $env:GOOS=$t.OS
     $env:GOARCH=$t.ARCH
     $outFile = Join-Path $DIST_DIR "$BINARY_NAME`_$($t.OS)_$($t.ARCH)$($t.EXT)"
-    go build -ldflags "$LD_FLAGS -X main.version=$VERSION" -o $outFile .
+    $LD_STR = "$LD_FLAGS -X 'main.version=$VERSION'"
+    go build -ldflags "$LD_STR" -o $outFile .
 }
 
 # Checksums

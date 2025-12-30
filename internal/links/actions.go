@@ -78,18 +78,11 @@ func Construct(state *state.TrovlState, targetPath, symlinkPath string) (models.
 
 	// Conflict: existing file at the symlink position
 	if symlinkInfo.Exists {
-		// 1. Existing file is NOT a symlink
 		if !symlinkInfo.IsSymlink {
 			// TODO: consider a backup feature if the existing target is a simple ordinary file
 			return models.Link{}, fmt.Errorf("existing file at symlink is not a symlink, exiting")
 		}
 
-		// 2. Existing symlink points to the same target, no-op unless wants another overwrite
-		if symlinkInfo.TargetPath == targetPath && !state.Options.OverwriteYes {
-			return models.Link{}, fmt.Errorf("existing symlink points to the same target as specified this time, no action taken")
-		}
-
-		// 3. Conflict: existing symlink, but it points to a different target, must ask for overwriting
 		shouldOverwrite := false
 
 		if state.Options.OverwriteYes {
@@ -97,7 +90,11 @@ func Construct(state *state.TrovlState, targetPath, symlinkPath string) (models.
 		} else if state.Options.OverwriteNo {
 			shouldOverwrite = false
 		} else {
-			state.Logger.Warn(fmt.Sprintf("Symlink %v already exists but points to another target (%v), should it be overwritten? [y/N]", symlinkInfo.TargetPath, symlinkPath))
+			if symlinkInfo.TargetPath == targetPath {
+				state.Logger.Warn(fmt.Sprintf("Symlink %v already exists and already points to %v, should it be overwritten? [y/N]", targetPath, symlinkPath))
+			} else {
+				state.Logger.Warn(fmt.Sprintf("Symlink %v already exists but points to another target (%v), should it be overwritten? [y/N]", symlinkInfo.TargetPath, symlinkPath))
+			}
 			fmt.Printf("> ")
 			var input = 'n'
 			if _, err := fmt.Scanf("%c\n", &input); err != nil {

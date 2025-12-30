@@ -23,6 +23,8 @@ package main
 
 import "github.com/sneha-afk/trovl/cmd"
 
+var version string = "dev"
+
 func main() {
-	cmd.Execute()
+	cmd.Execute(version)
 }

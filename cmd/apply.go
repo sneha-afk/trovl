@@ -48,7 +48,6 @@ var applyCmd = &cobra.Command{
 		}
 
 	},
-	Args:    cobra.MinimumNArgs(1),
 	Aliases: []string{"execute", "run", "do"},
 	Example: "trovl apply .trovl",
 }
