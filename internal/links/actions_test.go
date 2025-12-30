@@ -1,54 +1,17 @@
 package links_test
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/sneha-afk/trovl/internal/links"
 	"github.com/sneha-afk/trovl/internal/state"
+	"github.com/sneha-afk/trovl/internal/utils"
 )
 
 func TestMain(m *testing.M) {
 	os.Exit(m.Run())
-}
-
-func TestValidatePath(t *testing.T) {
-	tmp := t.TempDir()
-	pathExists := filepath.Join(tmp, "test_exists.go")
-
-	tests := []struct {
-		name      string
-		param     string
-		expected  bool
-		expectErr bool
-	}{
-		{"existing file", pathExists, true, false},
-		{"non-existing file", "test_exists_no.go", false, true},
-	}
-	file, err := os.Create(pathExists)
-	if err != nil {
-		log.Fatalf("TestValidatePath: could not create test file: %v", err)
-	}
-	file.Close()
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			res, err := links.ValidatePath(tc.param)
-
-			if res != tc.expected {
-				t.Errorf("expected %v, got %v (error: %v)", tc.expected, res, err)
-			}
-			if err != nil && tc.expectErr == false {
-				t.Errorf("%v", err)
-			}
-		})
-	}
-
-	if err := os.Remove(pathExists); err != nil {
-		log.Fatalf("TestValidatePath: could not delete test file: %v", err)
-	}
 }
 
 // Calls Construct and Add to simulate full work through of the add subcommand.
@@ -200,8 +163,7 @@ func TestValidateSymlink(t *testing.T) {
 				os.Symlink(targetPath, symlinkPath)
 			}
 
-			valid, err := links.ValidateSymlink(symlinkPath)
-
+			valid, err := utils.ValidateSymlink(symlinkPath)
 			if valid != tc.expected.valid {
 				t.Errorf("expected valid: %v, got: %v", tc.expected.valid, valid)
 			}
@@ -213,6 +175,8 @@ func TestValidateSymlink(t *testing.T) {
 }
 
 func TestRemoveByPath(t *testing.T) {
+	teststate := state.DefaultState()
+
 	tests := []struct {
 		name         string
 		targetExists bool
@@ -249,7 +213,7 @@ func TestRemoveByPath(t *testing.T) {
 				}
 			}
 
-			err := links.RemoveByPath(linkPath)
+			err := links.RemoveByPath(teststate, linkPath)
 
 			if (err != nil) != tc.expectErr {
 				t.Errorf("expected error: %v, got: %v", tc.expectErr, err)

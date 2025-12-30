@@ -15,7 +15,7 @@ var removeCmd = &cobra.Command{
 	in as truly being a symlink to prevent data loss.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, symlink := range args {
-			if err := links.RemoveByPath(symlink); err != nil {
+			if err := links.RemoveByPath(State, symlink); err != nil {
 				State.Logger.Error("Could not remove symlink", "error", err)
 				os.Exit(1)
 			}

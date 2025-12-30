@@ -3,8 +3,8 @@ package cmd
 import (
 	"os"
 
-	"github.com/sneha-afk/trovl/internal/links"
 	"github.com/sneha-afk/trovl/internal/manifests"
+	"github.com/sneha-afk/trovl/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -24,8 +24,8 @@ var applyCmd = &cobra.Command{
 		// Find one of the default filepaths to apply
 		if len(args) <= 0 {
 			for _, path := range defaultFiles {
-				ok, err := links.ValidatePath(path)
-				if !ok || err != nil {
+				info, err := utils.GetPathInfo(path)
+				if !info.Exists || err != nil {
 					continue
 				}
 

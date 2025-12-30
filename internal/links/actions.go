@@ -1,9 +1,11 @@
+/*
+Package links deals with core actions of handling symlinks.
+*/
 package links
 
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -11,59 +13,10 @@ import (
 
 	"github.com/sneha-afk/trovl/internal/models"
 	"github.com/sneha-afk/trovl/internal/state"
+	"github.com/sneha-afk/trovl/internal/utils"
 )
 
 var ErrDeclinedOverwrite = errors.New("user declined overwriting existing file, no action taken")
-
-type ConstructOptions struct {
-	OverwriteForceYes bool
-	OverwriteForceNo  bool
-}
-
-// ValidatePath checks if a file at the given path exists and is openable.
-func ValidatePath(path string) (bool, error) {
-	file, err := os.Open(path)
-	file.Close()
-	if err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-func IsSymlink(symlinkPath string) (bool, error) {
-	if valid, err := ValidatePath(symlinkPath); !valid || err != nil {
-		return false, err
-	}
-
-	symlinkInfo, err := os.Lstat(symlinkPath)
-	if err != nil {
-		return false, err
-	}
-
-	if symlinkInfo.Mode()&fs.ModeSymlink == 0 {
-		return false, fmt.Errorf("%v is not a symlink", symlinkPath)
-	}
-	return true, nil
-}
-
-// ValidateSymlink first ensures the symlink is indeed one at all, and that it is pointing
-// to a valid target file that exists.
-func ValidateSymlink(symlinkPath string) (bool, error) {
-	if valid, err := IsSymlink(symlinkPath); !valid || err != nil {
-		return false, err
-	}
-
-	targetPath, err := os.Readlink(symlinkPath)
-	if err != nil {
-		return false, fmt.Errorf("target file is not readable: %v", err)
-	}
-
-	if valid, err := ValidatePath(targetPath); !valid || err != nil {
-		return false, fmt.Errorf("could not validate target: %v", err)
-	}
-
-	return true, nil
-}
 
 // CleanLink defaults to using an absolute filepath, only relative if specified
 // Guaranteed that filepath.Clean has been called before returning
@@ -99,21 +52,18 @@ func Construct(state *state.TrovlState, targetPath, symlinkPath string) (models.
 		return models.Link{}, fmt.Errorf("invalid path (symlink): %v", err)
 	}
 
-	if valid, err := ValidatePath(targetPath); !valid || err != nil {
-		return models.Link{}, fmt.Errorf("invalid path '%v': %v", targetPath, err)
+	targetFileInfo, err := utils.GetPathInfo(targetPath)
+	if !targetFileInfo.Exists || err != nil {
+		return models.Link{}, fmt.Errorf("invalid target path '%v': %v", targetPath, err)
 	}
 
 	targetFile, err := os.Open(targetPath)
 	if err != nil {
 		return models.Link{}, err
 	}
-	targetFileInfo, err := targetFile.Stat()
-	if err != nil {
-		return models.Link{}, fmt.Errorf("could not get target file info: %v", err)
-	}
 
 	var linkType models.LinkType
-	if targetFileInfo.IsDir() {
+	if targetFileInfo.IsDir {
 		linkType = models.LinkDirectory
 	} else {
 		linkType = models.LinkFile
@@ -121,7 +71,25 @@ func Construct(state *state.TrovlState, targetPath, symlinkPath string) (models.
 
 	targetFile.Close()
 
-	if valid, err := ValidatePath(symlinkPath); valid || err == nil {
+	symlinkInfo, err := utils.GetPathInfo(symlinkPath)
+	if err != nil {
+		return models.Link{}, fmt.Errorf("could not get symlink info: %v", err)
+	}
+
+	// Conflict: existing file at the symlink position
+	if symlinkInfo.Exists {
+		// 1. Existing file is NOT a symlink
+		if !symlinkInfo.IsSymlink {
+			// TODO: consider a backup feature if the existing target is a simple ordinary file
+			return models.Link{}, fmt.Errorf("existing file at symlink is not a symlink, exiting")
+		}
+
+		// 2. Existing symlink points to the same target, no-op unless wants another overwrite
+		if symlinkInfo.TargetPath == targetPath && !state.Options.OverwriteYes {
+			return models.Link{}, fmt.Errorf("existing symlink points to the same target as specified this time, no action taken")
+		}
+
+		// 3. Conflict: existing symlink, but it points to a different target, must ask for overwriting
 		shouldOverwrite := false
 
 		if state.Options.OverwriteYes {
@@ -129,7 +97,7 @@ func Construct(state *state.TrovlState, targetPath, symlinkPath string) (models.
 		} else if state.Options.OverwriteNo {
 			shouldOverwrite = false
 		} else {
-			state.Logger.Warn(fmt.Sprintf("Symlink %v already exists, should it be overwritten? [y/N]", symlinkPath))
+			state.Logger.Warn(fmt.Sprintf("Symlink %v already exists but points to another target (%v), should it be overwritten? [y/N]", symlinkInfo.TargetPath, symlinkPath))
 			fmt.Printf("> ")
 			var input = 'n'
 			if _, err := fmt.Scanf("%c\n", &input); err != nil {
@@ -166,13 +134,23 @@ func Add(link *models.Link) error {
 
 // RemoveByPath takes in the path to a symlink to remove, while keeping the original
 // file intact (note: target file is not checked for existence as the symlink is being removed.)
-func RemoveByPath(path string) error {
+func RemoveByPath(state *state.TrovlState, path string) error {
 	path, err := CleanLink(path, true)
 	if err != nil {
 		return fmt.Errorf("invalid path (symlink): %v", err)
 	}
-	if valid, err := IsSymlink(path); !valid || err != nil {
+	info, err := utils.GetPathInfo(path)
+	if err != nil {
+		return fmt.Errorf("could not get symlink info: %v", err)
+	}
+
+	if !info.Exists {
+		return fmt.Errorf("no symlink exists at %v", path)
+	}
+
+	if !info.IsSymlink {
 		return fmt.Errorf("invalid symlink: %v", err)
 	}
+
 	return os.Remove(path)
 }
