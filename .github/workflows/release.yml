@@ -55,6 +55,7 @@ jobs:
                       display_name: windows
                       arch: arm64
                       runner: windows-latest
+
         steps:
             - uses: actions/checkout@v4
 
@@ -63,28 +64,42 @@ jobs:
                   go-version: ${{ env.GO_VERSION }}
                   cache: true
 
-            - name: Build binary
+            - name: Build & package
+              shell: bash
               run: |
+                  set -euo pipefail
+
                   VERSION="${GITHUB_REF_NAME#v}"
-                  EXT=${{ matrix.os == 'windows' && '.exe' || '' }}
-                  BINARY="trovl$EXT"
+                  EXT=""
+                  if [[ "${{ matrix.os }}" == "windows" ]]; then
+                    EXT=".exe"
+                  fi
+
+                  BINARY="trovl${EXT}"
+                  NAME="trovl_${{ matrix.display_name }}_${{ matrix.arch }}"
 
                   CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} \
-                    go build -trimpath -ldflags "-s -w -X main.version=$VERSION" -o "$BINARY" .
+                    go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o "${BINARY}" .
 
-                  ZIP_NAME="trovl_${{ matrix.display_name }}_${{ matrix.arch }}.zip"
-
-                  if command -v zip &> /dev/null; then
-                    zip "$ZIP_NAME" "$BINARY"
+                  if [[ "${{ matrix.os }}" == "windows" ]]; then
+                    ARCHIVE="${NAME}.zip"
+                    if command -v zip &>/dev/null; then
+                      zip "${ARCHIVE}" "${BINARY}"
+                    else
+                      7z a "${ARCHIVE}" "${BINARY}"
+                    fi
                   else
-                    7z a "$ZIP_NAME" "$BINARY"
+                    chmod +x "${BINARY}"
+                    ARCHIVE="${NAME}.tar.gz"
+                    tar -czf "${ARCHIVE}" "${BINARY}"
                   fi
-              shell: bash
 
             - uses: actions/upload-artifact@v4
               with:
                   name: trovl-${{ matrix.display_name }}-${{ matrix.arch }}
-                  path: "*.zip"
+                  path: |
+                      *.zip
+                      *.tar.gz
                   retention-days: 1
                   if-no-files-found: error
 
@@ -104,7 +119,7 @@ jobs:
             - name: Generate checksums
               run: |
                   cd artifacts
-                  sha256sum *.zip > checksums.txt
+                  sha256sum *.zip *.tar.gz > checksums.txt
                   cat checksums.txt
 
             - uses: softprops/action-gh-release@v2

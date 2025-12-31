@@ -33,6 +33,7 @@ go.work.sum
 
 trovl
 dist/
+*.zip
 
 # manifests
 .trovl
