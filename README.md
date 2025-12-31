@@ -1,157 +1,158 @@
 # trovl
 
-Do you find yourself wrangling symlinks across different OSes with varying syntax, positions, or otherwise pain?
-`trovl` is a simple, cross-platform symlink manager with:
-- Cross-platform support: Windows, Linux, macOS in both amd/arm (64-bit systems only)
-- Override a symlink's position and name by OS
-- True symlinks when possible
-- Schema-based bulk creations of symlinks (perfect for your dotfiles!)
+A simple, cross-platform symlink manager that eliminates the pain of managing symlinks across different operating systems.
 
+## Why trovl?
+
+Tired of dealing with:
+- Different symlink syntax across Windows, Linux, and macOS?
+- Platform-specific symlink locations or names (like `~/.vimrc` vs `~/_vimrc`)?
+- Manually managing dozens of symlinks for various programs and configurations?
+
+**trovl** provides:
+- **Cross-platform support** - Windows, Linux, macOS (amd64 & arm64)
+- **Platform-specific overrides** - Different link paths per OS
+- **True symlinks** - Uses native symlink APIs when possible
+- **Schema-based management** - Define all your symlinks in one JSON file to perform bulk operations, perfect for dotfiles!
 
 ## Installation
 
-### From Source
+See [INSTALL.md](./INSTALL.md) for detailed installation instructions including pre-built binaries.
 
+**Quick install with Go:**
 ```bash
 go install github.com/sneha-afk/trovl@latest
 ```
 
-### Pre-built Binaries
+## Quick Start
 
-Download the latest release for your platform from the [releases page](https://github.com/sneha-afk/trovl/releases).
-
-For example, getting the latest `linux-amd64` build with `curl`: simply change the ending OS and architecture as needed
-```bash
-curl -LO https://github.com/sneha-afk/trovl/releases/latest/download/trovl_linux_amd64
-```
-
-## Commands
-
-- `add` - Create a new symlink pointing to a target file or directory
-- `apply` - Apply a list of links defined in a schema file
-- `remove` - Delete a symlink while preserving the target
-- `completion` - Generate shell completion scripts for bash, zsh, fish, or powershell
-- `help` - Display help information for any command
-- `--version` - See current version
-
-## Global Flags
-
-- `--debug` - Show debug information including file paths and line numbers
-- `--verbose` - Display verbose output for all operations
-- `--help` - Show help information
-
-## Usage
-
-### Adding Links
-
-Create a symlink that points to a target file or directory:
-
-
+### `add` a symlink
+Can link to files or directories, default to *absolute* path resolution:
 ```bash
 trovl add /path/to/target /path/to/symlink
 ```
 
-### Removing Links
-
-Remove a symlink without touching the target file:
-
+### `remove` a symlink
+Safely removes symlinks while keeping the target file:
 ```bash
-trovl remove mylink
+trovl remove /path/to/symlink
 ```
 
-### Applying Schemas
-
-Apply multiple links from a JSON schema file:
-
+### `apply` bulk operations
 ```bash
-trovl apply schema.json
+trovl apply .trovl.json
 ```
 
-See the [schema](https://github.com/sneha-afk/trovl/blob/main/docs/trovl_schema.json) to see all possible options.
+#### Defining schema
 
-
-The following is an example `.trovl.json`:
+Define all your symlinks in a `json` file:
 
 ```json
 {
-    "$schema": "https://github.com/sneha-afk/trovl/raw/main/docs/trovl_schema.json",
-    "links": [
-        {
-            "target": "~/dotfiles/dot-home/.vimrc",
-            "link": "~/.vimrc",
-            "platforms": ["all"], // its fine if this includes the platforms overwritten!
-            "platform_overrides": {
-                "windows": { "link": "~/_vimrc" }
-            }
-        },
-        {
-            "target": "~/dotfiles/dot-home/.gitconfig",
-            "link": "~/.gitconfig",
-            "platforms": ["all"]
-        }
-    ]
+  "$schema": "https://github.com/sneha-afk/trovl/raw/main/docs/trovl_schema.json",
+  "links": [
+    {
+      "target": "~/dotfiles/.vimrc",
+      "link": "~/.vimrc",
+      "platforms": ["all"],
+      "platform_overrides": {
+        "windows": { "link": "~/_vimrc" }
+      }
+    },
+    {
+      "target": "~/dotfiles/.gitconfig",
+      "link": "~/.gitconfig",
+      "platforms": ["all"]
+    }
+  ]
 }
-
 ```
 
+Then apply all links at once:
+```bash
+trovl apply .trovl.json # can be named anything!
+```
+
+See the full [schema documentation](https://github.com/sneha-afk/trovl/blob/main/docs/trovl_schema.json) for all available options.
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `add` | Create a new symlink pointing to a target |
+| `apply` | Apply multiple links from a schema file |
+| `remove` | Delete a symlink (preserves target) |
+| `completion` | Generate shell completion scripts |
+| `help` | Display help for any command |
+| `--version` | Show version information |
+
+## Global Flags
+
+- `--debug` - Show debug information (file paths, line numbers)
+- `--verbose` - Display verbose output
+- `--help` - Show help information
+
+## Shell Completion
+
+Generate completion scripts for your shell:
+
+```bash
+# Bash
+trovl completion bash > /etc/bash_completion.d/trovl
+
+# Zsh
+trovl completion zsh > "${fpath[1]}/_trovl"
+
+# Fish
+trovl completion fish > ~/.config/fish/completions/trovl.fish
+
+# PowerShell
+trovl completion powershell > trovl.ps1
+```
+
+## Contributing
+
+Contributions are welcome! Bug reports and pull requests can be submitted via [issues](https://github.com/sneha-afk/trovl/issues).
+
+**Bug reports:** Please include the output of `go test ./... -v` and your platform details (OS, architecture).
 
 ## Development
 
-### Prerequisites
+<details>
 
-- Go 1.25 or later
+
+**Prerequisites:**
+- Go 1.21+
 - [Task](https://taskfile.dev) (optional, for task runner)
 
-Run `task --list` to see all available development tasks.
+<summary>Working on trovl</summary>
 
-<details>
-<summary>
-Building and Workflows
-</summary>
-
-### Building from Source
-
+**Clone and build:**
 ```bash
-git clone https://github.com/yourusername/trovl.git
+git clone https://github.com/sneha-afk/trovl.git
 cd trovl
-
 go build
-# Or using Task
-task build
 ```
 
-### Development Workflow
-
-[gopls](https://go.dev/gopls/) is recommended for automatic formatting and completions.
-
+**Development tasks** (requires Task):
 ```bash
-# Run formatter
-task fmt
-
-# Run tests
-task test
-
-# Format + run tests
-task check
+task --list      # List all available tasks
+task fmt         # Format code
+task test        # Run tests
+task check       # Format + test
+task build       # Build binary
+task release     # Build for all platforms
 ```
 
-### Building Release Binaries
+**Recommended tooling:**
+- [gopls](https://go.dev/gopls/) for IDE support and formatting
 
+**Testing:**
 ```bash
-# Build for all platforms
-task release
-
-# Binaries will be in dist/ with checksums
+go test ./... -v
 ```
 
 </details>
-
-## Contributing and Bugs
-
-`trovl` is developed on Windows 11 and verified both on Windows and Ubuntu via WSL on x86-64 architecture.
-
-Any bug reports and contributions are more than welcome, especially on platforms I have not gotten to testing.
-A simple dump of `go test ./... -v` is the best!
 
 ## License
 
