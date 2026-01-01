@@ -15,13 +15,47 @@ Tired of dealing with:
 - **True symlinks** - Uses native symlink APIs when possible
 - **Schema-based management** - Define all your symlinks in one JSON file to perform bulk operations, perfect for dotfiles!
 
+### And why not others?
+
+`trovl` is *symlink-first* and keeps the current filesystem as the source of truth for actions to take. Running `trovl` is primarily through explicit commands and manifest-driven sequences which allows for easy migrations and clear intentions.
+
+[GNU `stow`](https://www.gnu.org/software/stow/) is the most direct inspiration for `trovl` and its design principles.
+
+
 ## Installation
 
 See [INSTALL.md](./INSTALL.md) for detailed installation instructions including pre-built binaries.
 
-**Quick install with Go:**
+### Recommended: install with Go
 ```bash
 go install github.com/sneha-afk/trovl@latest
+```
+
+Re-running this command will install the latest released version and overwrite the existing binary.
+
+### Pre-built binaries from [Releases](https://github.com/sneha-afk/trovl/releases)
+
+Requirements:
+- `curl` (can also be substituted with `Invoke-WebRequest/iwr` on Windows)
+- `tar` or `Expand-Archive` (i.e any archive tool)
+
+See [INSTALL.md](./INSTALL.md) for all directions.
+
+<details>
+<summary>Example install for linux-amd64</summary>
+
+```bash
+curl -LO https://github.com/sneha-afk/trovl/releases/latest/download/trovl_linux_amd64.tar.gz
+tar -xzf trovl_linux_amd64.tar.gz
+```
+
+</details>
+
+### Build from source
+
+Optional flags to optimize build size:
+```bash
+go build -ldflags="-s -w"
 ```
 
 ## Quick Start
@@ -107,7 +141,7 @@ trovl completion zsh > "${fpath[1]}/_trovl"
 trovl completion fish > ~/.config/fish/completions/trovl.fish
 
 # PowerShell
-trovl completion powershell > trovl.ps1
+trovl completion powershell > trovl.ps1 # then source in $PROFILE
 ```
 
 ## Contributing
@@ -118,13 +152,11 @@ Contributions are welcome! Bug reports and pull requests can be submitted via [i
 
 ## Development
 
-<details>
-
-
 **Prerequisites:**
 - Go 1.21+
 - [Task](https://taskfile.dev) (optional, for task runner)
 
+<details>
 <summary>Working on trovl</summary>
 
 **Clone and build:**

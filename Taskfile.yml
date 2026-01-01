@@ -3,75 +3,70 @@
 version: "3"
 
 vars:
-    BINARY_NAME: trovl
-    DEV_LD_FLAGS: ""
-    RELEASE_LD_FLAGS: -s -w
-    RELEASE_TARGETS:
-        - "windows amd64 .exe"
-        - "windows arm64 .exe"
-        - "linux amd64"
-        - "linux arm64"
-        - "darwin amd64"
-        - "darwin arm64"
+  BINARY_NAME: trovl
+  DEV_LD_FLAGS: ""
+  RELEASE_LD_FLAGS: -s -w
+  RELEASE_TARGETS:
+    - "windows amd64 .exe"
+    - "windows arm64 .exe"
+    - "linux amd64"
+    - "linux arm64"
+    - "darwin amd64"
+    - "darwin arm64"
 
 tasks:
-    default:
-        desc: Show available tasks
-        cmds:
-            - task --list
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
 
-    build:
-        desc: Build for the current operating system
-        cmds:
-            - go build -ldflags="{{.DEV_LD_FLAGS}}" -o {{.BINARY_NAME}}{{exeExt}} .
-    fmt:
-        desc: Format code
-        cmds:
-            - go fmt ./...
+  build:
+    desc: Build for the current operating system
+    cmds:
+      - go build -ldflags="{{.DEV_LD_FLAGS}}" -o {{.BINARY_NAME}}{{exeExt}} .
+  fmt:
+    desc: Format code
+    cmds:
+      - go fmt ./...
 
-    test:
-        desc: Run tests
-        cmds:
-            - go test ./... {{.CLI_ARGS}}
+  test:
+    desc: Run tests
+    cmds:
+      - go test ./... {{.CLI_ARGS}}
 
-    test-coverage:
-        desc: Run tests with coverage report
-        cmds:
-            - go test -coverprofile=coverage.out ./...
-            - go tool cover -html=coverage.out -o coverage.html
-            - echo "Coverage report generated at coverage.html"
+  test-coverage:
+    desc: Run tests with coverage report
+    cmds:
+      - go test -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out -o coverage.html
+      - echo "Coverage report generated at coverage.html"
 
-    check:
-        desc: Run all checks (fmt, lint, test)
-        cmds:
-            - task: fmt
-            - task: test
+  check:
+    desc: Run all checks (fmt, lint, test)
+    cmds:
+      - task: fmt
+      - task: test
 
-    install:
-        desc: Install to GOBIN (usually ~/go/bin)
-        cmds:
-            - go install -ldflags="{{.RELEASE_LD_FLAGS}}" .
+  install:
+    desc: Install to GOBIN (usually ~/go/bin)
+    cmds:
+      - go install -ldflags="{{.RELEASE_LD_FLAGS}}" .
 
-    uninstall:
-        desc: Remove from GOBIN
-        cmds:
-            - rm -f $(go env GOPATH)/bin/{{.BINARY_NAME}}{{exeExt}}
+  uninstall:
+    desc: Remove from GOBIN
+    cmds:
+      - rm -f $(go env GOPATH)/bin/{{.BINARY_NAME}}{{exeExt}}
 
-    clean:
-        desc: Clean up build artifacts
-        cmds:
-            - rm -rf dist/
-            - rm -f {{.BINARY_NAME}}
-            - rm -f {{.BINARY_NAME}}.exe
-            - rm -f coverage.out coverage.html
+  clean:
+    desc: Clean up build artifacts
+    cmds:
+      - rm -rf dist/
+      - rm -f {{.BINARY_NAME}}
+      - rm -f {{.BINARY_NAME}}.exe
+      - rm -f coverage.out coverage.html
 
-    clean-all:
-        desc: Clean everything including caches
-        cmds:
-            - task: clean
-            - go clean -cache -testcache -modcache
-
-    release:
-        desc: Build release binaries
-        cmds:
-            - if [ "$(uname -s)" = "Windows_NT" ]; then powershell -ExecutionPolicy Bypass -File ./scripts/release_binaries.ps1; else ./scripts/release_binaries.sh; fi
+  clean-all:
+    desc: Clean everything including caches
+    cmds:
+      - task: clean
+      - go clean -cache -testcache -modcache
