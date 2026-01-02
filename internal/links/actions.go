@@ -78,6 +78,11 @@ func Construct(state *state.TrovlState, targetPath, symlinkPath string) (models.
 
 	// Conflict: existing file at the symlink position
 	if symlinkInfo.Exists {
+		if state.Options.DryRun {
+			state.Logger.Info("[DRY-RUN] conflict with existing file", "link", symlinkPath)
+			return models.Link{}, nil
+		}
+
 		if !symlinkInfo.IsSymlink {
 			// TODO: consider a backup feature if the existing target is a simple ordinary file
 			return models.Link{}, fmt.Errorf("existing file at symlink is not a symlink, exiting")
@@ -147,6 +152,11 @@ func RemoveByPath(state *state.TrovlState, path string) error {
 
 	if !info.IsSymlink {
 		return fmt.Errorf("invalid symlink: %v", err)
+	}
+
+	if state.Options.DryRun {
+		state.Logger.Info("[DRY-RUN] would remove symlink", "link", path)
+		return nil
 	}
 
 	return os.Remove(path)

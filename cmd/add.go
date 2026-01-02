@@ -23,12 +23,15 @@ var addCmd = &cobra.Command{
 				os.Exit(1)
 			}
 
-			if err := links.Add(&link); err != nil {
-				State.Logger.Error("Failed to create link (maybe try running as admin?)", "error", err)
-				os.Exit(1)
+			if State.Options.DryRun {
+				State.Logger.Info("[DRY-RUN] would create symlink", "target", target, "link", symlink)
+			} else {
+				if err := links.Add(&link); err != nil {
+					State.Logger.Error("Failed to create link (maybe try running as admin?)", "error", err)
+					os.Exit(1)
+				}
+				State.Logger.Info("Successfully added symlink", "link", symlink, "target", target)
 			}
-
-			State.Logger.Info("Successfully added symlink", "link", symlink, "target", target)
 		}
 	},
 	Args:    cobra.MinimumNArgs(2),

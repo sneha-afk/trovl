@@ -16,6 +16,7 @@ type TrovlOptions struct {
 	UseRelative  bool
 	OverwriteYes bool
 	OverwriteNo  bool
+	DryRun       bool
 }
 
 type TrovlState struct {
@@ -26,15 +27,6 @@ type TrovlState struct {
 
 func New(opts *TrovlOptions) *TrovlState {
 	lvl := &slog.LevelVar{}
-
-	switch {
-	case opts.Debug:
-		lvl.Set(slog.LevelDebug)
-	case opts.Verbose:
-		lvl.Set(slog.LevelInfo)
-	default:
-		lvl.Set(slog.LevelWarn)
-	}
 
 	// handlerOpts := &slog.HandlerOptions{
 	// 	Level:     lvl,
@@ -78,11 +70,14 @@ func New(opts *TrovlOptions) *TrovlState {
 		},
 	}))
 
-	return &TrovlState{
+	state := TrovlState{
 		Options: opts,
 		Logger:  logger,
 		Level:   lvl,
 	}
+	state.SetLogLevel()
+
+	return &state
 }
 
 func DefaultState() *TrovlState {
@@ -95,4 +90,16 @@ func (s *TrovlState) Verbose() bool {
 
 func (s *TrovlState) Debug() bool {
 	return s.Options.Debug
+}
+
+// SetLogLevel should be called after setting or changing the log level
+func (s *TrovlState) SetLogLevel() {
+	switch {
+	case s.Options.Debug:
+		s.Level.Set(slog.LevelDebug)
+	case s.Options.Verbose, s.Options.DryRun:
+		s.Level.Set(slog.LevelInfo)
+	default:
+		s.Level.Set(slog.LevelWarn)
+	}
 }

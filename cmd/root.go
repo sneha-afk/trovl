@@ -26,6 +26,7 @@ and true-symlinking when possible.
 	`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		State = state.New(cfg)
+		State.SetLogLevel()
 		slog.SetDefault(State.Logger)
 	},
 }
@@ -45,4 +46,5 @@ func init() {
 	State = state.DefaultState()
 	rootCmd.PersistentFlags().BoolVarP(&cfg.Verbose, "verbose", "v", false, "have verbose outputs for actions taken")
 	rootCmd.PersistentFlags().BoolVar(&cfg.Debug, "debug", false, "show debug info")
+	rootCmd.PersistentFlags().BoolVar(&cfg.DryRun, "dry-run", false, "do a dry run where no changes happen")
 }

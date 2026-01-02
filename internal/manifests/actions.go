@@ -149,11 +149,13 @@ func (m *Manifest) Apply(state *state.TrovlState) error {
 		if err != nil && !errors.Is(err, links.ErrDeclinedOverwrite) {
 			return fmt.Errorf("links[%d]: %w", i, err)
 		}
-		if err := links.Add(&constructed); err != nil {
-			return fmt.Errorf("links[i] %w", err)
-		}
 
-		if state.Verbose() {
+		if state.Options.DryRun {
+			state.Logger.Info("[DRY-RUN] would create symlink", "linkNum", i, "target", link.Target, "link", linkToUse)
+		} else {
+			if err := links.Add(&constructed); err != nil {
+				return fmt.Errorf("links[%d] %w", i, err)
+			}
 			state.Logger.Info(fmt.Sprintf("Successfully added symlink [%v/%v]", i, numLinks), "link", linkToUse, "target", link.Target)
 		}
 	}
