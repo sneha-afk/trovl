@@ -262,7 +262,7 @@ func TestApply(t *testing.T) {
 		name     string
 		content  string
 		wantErr  bool
-		state    *state.TrovlState
+		options  *state.TrovlOptions
 		setup    func(string)
 		validate func(*testing.T, string)
 	}{
@@ -319,12 +319,15 @@ func TestApply(t *testing.T) {
 		{
 			name:    "platform-specific link NOT matching current OS",
 			content: differentPlatformOnly,
-			wantErr: true,
+			wantErr: false,
 			setup: func(tmpDir string) {
 				os.WriteFile(filepath.Join(tmpDir, "actual_file"), []byte("content"), 0644)
 			},
 			validate: func(t *testing.T, tmpDir string) {
-				// expects err
+				symlinkPath := filepath.Join(tmpDir, "symlink")
+				if _, err := os.Lstat(symlinkPath); err == nil {
+					t.Errorf("symlink was created when it shouldn't have been: %v", err)
+				}
 			},
 		},
 		{
@@ -369,10 +372,8 @@ func TestApply(t *testing.T) {
 			name:    "relative link",
 			content: relativeLink,
 			wantErr: false,
-			state: &state.TrovlState{
-				Options: &state.TrovlOptions{
-					UseRelative: true,
-				},
+			options: &state.TrovlOptions{
+				UseRelative: true,
 			},
 			setup: func(tmpDir string) {
 				os.WriteFile(filepath.Join(tmpDir, "actual_file"), []byte("content"), 0644)
@@ -541,10 +542,11 @@ func TestApply(t *testing.T) {
 			os.Chdir(tmpDir)
 			defer os.Chdir(oldWd)
 
-			if tt.state == nil {
+			if tt.options == nil {
 				err = m.Apply(teststate)
 			} else {
-				err = m.Apply(tt.state)
+				newstate := state.New(tt.options)
+				err = m.Apply(newstate)
 			}
 
 			if tt.wantErr {

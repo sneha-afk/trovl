@@ -15,7 +15,6 @@ import (
 
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/sneha-afk/trovl/internal/links"
-	"github.com/sneha-afk/trovl/internal/models"
 	"github.com/sneha-afk/trovl/internal/state"
 )
 
@@ -125,8 +124,6 @@ func (m *Manifest) UnmarshalJSON(data []byte) error {
 }
 
 func (m *Manifest) Apply(state *state.TrovlState) error {
-	var constructed models.Link
-	var err error
 	var linkToUse string
 	var numLinks = len(m.Links)
 
@@ -146,17 +143,12 @@ func (m *Manifest) Apply(state *state.TrovlState) error {
 			}
 		}
 
-		constructed, err = links.Construct(state, link.Target, linkToUse)
+		err := links.Add(state, link.Target, linkToUse)
 		if err != nil && !errors.Is(err, links.ErrDeclinedOverwrite) {
 			return fmt.Errorf("links[%d]: %w", i, err)
 		}
 
-		if state.Options.DryRun {
-			state.Logger.Info("[DRY-RUN] would create symlink", "linkNum", i, "target", link.Target, "link", linkToUse)
-		} else {
-			if err := links.Add(&constructed); err != nil {
-				return fmt.Errorf("links[%d] %w", i, err)
-			}
+		if !state.Options.DryRun {
 			state.Logger.Info(fmt.Sprintf("Successfully added symlink [%v/%v]", i, numLinks), "link", linkToUse, "target", link.Target)
 		}
 	}

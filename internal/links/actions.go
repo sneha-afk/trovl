@@ -11,10 +11,22 @@ import (
 	"path/filepath"
 	"unicode"
 
-	"github.com/sneha-afk/trovl/internal/models"
 	"github.com/sneha-afk/trovl/internal/state"
 	"github.com/sneha-afk/trovl/internal/utils"
 )
+
+type LinkType int
+
+const (
+	LinkFile LinkType = iota
+	LinkDirectory
+)
+
+type Link struct {
+	Target    string   `json:"target"`     // Real file/directory
+	LinkMount string   `json:"link_mount"` // Where the symlink is
+	Type      LinkType `json:"link_type"`
+}
 
 var ErrDeclinedOverwrite = errors.New("user declined overwriting existing file, no action taken")
 
@@ -42,50 +54,41 @@ func CleanLink(raw string, useRelative bool) (string, error) {
 }
 
 // Construct a Link type and validate the target file exists.
-func Construct(state *state.TrovlState, targetPath, symlinkPath string) (models.Link, error) {
-	targetPath, err := CleanLink(targetPath, state.Options.UseRelative)
-	if err != nil {
-		return models.Link{}, fmt.Errorf("invalid path (target): %v", err)
-	}
-	symlinkPath, err = CleanLink(symlinkPath, state.Options.UseRelative)
-	if err != nil {
-		return models.Link{}, fmt.Errorf("invalid path (symlink): %v", err)
-	}
-
+func Construct(state *state.TrovlState, targetPath, symlinkPath string) (Link, error) {
 	targetFileInfo, err := utils.GetPathInfo(targetPath)
 	if !targetFileInfo.Exists || err != nil {
-		return models.Link{}, fmt.Errorf("invalid target path '%v': %v", targetPath, err)
+		return Link{}, fmt.Errorf("invalid target path '%v': %v", targetPath, err)
 	}
 
 	targetFile, err := os.Open(targetPath)
 	if err != nil {
-		return models.Link{}, err
+		return Link{}, err
 	}
 
-	var linkType models.LinkType
+	var linkType LinkType
 	if targetFileInfo.IsDir {
-		linkType = models.LinkDirectory
+		linkType = LinkDirectory
 	} else {
-		linkType = models.LinkFile
+		linkType = LinkFile
 	}
 
 	targetFile.Close()
 
 	symlinkInfo, err := utils.GetPathInfo(symlinkPath)
 	if err != nil {
-		return models.Link{}, fmt.Errorf("could not get symlink info: %v", err)
+		return Link{}, fmt.Errorf("could not get symlink info: %v", err)
 	}
 
 	// Conflict: existing file at the symlink position
 	if symlinkInfo.Exists {
 		if state.Options.DryRun {
 			state.Logger.Info("[DRY-RUN] conflict with existing file", "link", symlinkPath)
-			return models.Link{}, nil
+			return Link{}, nil
 		}
 
 		if !symlinkInfo.IsSymlink {
 			// TODO: consider a backup feature if the existing target is a simple ordinary file
-			return models.Link{}, fmt.Errorf("existing file at symlink is not a symlink, exiting")
+			return Link{}, fmt.Errorf("existing file at symlink is not a symlink, exiting")
 		}
 
 		shouldOverwrite := false
@@ -103,7 +106,7 @@ func Construct(state *state.TrovlState, targetPath, symlinkPath string) (models.
 			fmt.Printf("> ")
 			var input = 'n'
 			if _, err := fmt.Scanf("%c\n", &input); err != nil {
-				return models.Link{}, fmt.Errorf("could not read input, no action taken: %v", err)
+				return Link{}, fmt.Errorf("could not read input, no action taken: %v", err)
 			}
 			shouldOverwrite = unicode.ToLower(input) == 'y'
 		}
@@ -111,15 +114,15 @@ func Construct(state *state.TrovlState, targetPath, symlinkPath string) (models.
 		if shouldOverwrite {
 			state.Logger.Warn("Overwriting existing file...")
 			if err := os.Remove(symlinkPath); err != nil {
-				return models.Link{}, fmt.Errorf("could not delete existing file: %v", err)
+				return Link{}, fmt.Errorf("could not delete existing file: %v", err)
 			}
 		} else {
 			state.Logger.Warn("Declined overwriting existing file, no action taken")
-			return models.Link{}, ErrDeclinedOverwrite
+			return Link{}, ErrDeclinedOverwrite
 		}
 	}
 
-	return models.Link{
+	return Link{
 		Target:    targetPath,
 		LinkMount: symlinkPath,
 		Type:      linkType,
@@ -127,10 +130,28 @@ func Construct(state *state.TrovlState, targetPath, symlinkPath string) (models.
 }
 
 // Add a symlink specified by the Link class.
-// Wrapper around os.Symlink which is already OS-agnostic
 // Precondition: there is no existing file where the symlink was specified
-func Add(link *models.Link) error {
-	err := os.Symlink(link.Target, link.LinkMount)
+func Add(state *state.TrovlState, targetPath, symlinkPath string) error {
+	targetPath, err := CleanLink(targetPath, state.Options.UseRelative)
+	if err != nil {
+		return fmt.Errorf("invalid path (target): %v", err)
+	}
+	symlinkPath, err = CleanLink(symlinkPath, state.Options.UseRelative)
+	if err != nil {
+		return fmt.Errorf("invalid path (symlink): %v", err)
+	}
+
+	link, err := Construct(state, targetPath, symlinkPath)
+	if err != nil {
+		return fmt.Errorf("failed to construct link: %v", err)
+	}
+
+	if state.Options.DryRun {
+		state.Logger.Info("[DRY-RUN] would create symlink", "target", targetPath, "link", symlinkPath)
+		return nil
+	}
+
+	err = os.Symlink(link.Target, link.LinkMount)
 	return err
 }
 

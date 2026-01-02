@@ -54,6 +54,10 @@ func New(opts *TrovlOptions) *TrovlState {
 	// 	},
 	// }
 
+	if opts == nil {
+		opts = &TrovlOptions{}
+	}
+
 	logger := slog.New(tint.NewHandler(os.Stderr, &tint.Options{
 		Level:     lvl,
 		AddSource: opts.Debug,

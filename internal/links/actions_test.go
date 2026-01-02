@@ -68,7 +68,6 @@ func TestAdd(t *testing.T) {
 				os.WriteFile(targetPath, []byte("target"), 0644)
 			}
 			if tc.linkExists {
-				// os.WriteFile(linkPath, []byte("existing"), 0644)
 				os.Symlink(targetPath, linkPath)
 			}
 
@@ -83,25 +82,25 @@ func TestAdd(t *testing.T) {
 			res, err := links.Construct(state, targetPath, linkPath)
 
 			if (err != nil) != tc.expected.err {
-				t.Errorf("expected error: %v, got: %v", tc.expected.err, err)
+				t.Errorf("(Construct) expected error: %v, got: %v", tc.expected.err, err)
 			}
 
 			if err == nil {
 				if res.Target != targetPath || res.LinkMount != linkPath {
-					t.Errorf("returned Link struct mismatch: expected target = %v, got %v; expected symlink = %v, got %v", targetPath, res.Target, linkPath, res.LinkMount)
+					t.Errorf("(Construct) returned Link struct mismatch: expected target = %v, got %v; expected symlink = %v, got %v", targetPath, res.Target, linkPath, res.LinkMount)
 				}
 
 				// if decided to overwrite, Construct would remove the old file so Add is guaranteed to add something
 				if tc.linkExists && tc.userInput == "y\n" {
 					if _, err := os.Stat(linkPath); err == nil {
-						t.Error("expected existing link file to be deleted (yes to overwrit), but it still exists")
+						t.Error("(Construct) expected existing link file to be deleted (yes to overwrit), but it still exists")
 					}
 				}
 			}
 
-			err = links.Add(&res)
+			err = links.Add(state, targetPath, linkPath)
 			if (err != nil) != tc.expected.err {
-				t.Errorf("expected error: %v, got: %v", tc.expected.err, err)
+				t.Errorf("(Add) expected error: %v, got: %v", tc.expected.err, err)
 			}
 
 		})
