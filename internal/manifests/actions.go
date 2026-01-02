@@ -141,7 +141,8 @@ func (m *Manifest) Apply(state *state.TrovlState) error {
 			if slices.Contains(link.Platforms, "all") || slices.Contains(link.Platforms, runtime.GOOS) {
 				linkToUse = link.Link
 			} else {
-				return fmt.Errorf("links[%d]: link does not apply to platform %q", i, runtime.GOOS)
+				state.Logger.Warn(fmt.Sprintf("links[%d]: link does not apply to current platform, skipping", i), "linkNum", i, "target", link.Target)
+				continue
 			}
 		}
 
