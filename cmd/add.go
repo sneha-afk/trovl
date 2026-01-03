@@ -38,6 +38,9 @@ func init() {
 	addCmd.Flags().BoolVar(&cfg.UseRelative, "relative", false, "retain relative paths to target")
 	addCmd.Flags().BoolVar(&cfg.OverwriteYes, "overwrite", false, "overwrite any existing symlinks")
 	addCmd.Flags().BoolVar(&cfg.OverwriteNo, "no-overwrite", false, "do not overwrite any existing symlinks")
+	addCmd.Flags().BoolVar(&cfg.BackupYes, "backup", false, "backup existing single files if a symlink would overwrite it")
+	addCmd.Flags().BoolVar(&cfg.BackupYes, "no-backup", false, "do not backup existing files and abandon symlink creation")
 
 	addCmd.MarkFlagsMutuallyExclusive("overwrite", "no-overwrite")
+	addCmd.MarkFlagsMutuallyExclusive("backup", "no-backup")
 }

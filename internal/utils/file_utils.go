@@ -2,8 +2,12 @@ package utils
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
+	"strings"
+	"time"
 )
 
 type PathInfo struct {
@@ -12,6 +16,8 @@ type PathInfo struct {
 	IsSymlink  bool
 	TargetPath string // If this is a symlink, what is is pointing to?
 }
+
+var FileTimeFormat = "2006-01-02_15-04-05"
 
 func GetPathInfo(path string) (PathInfo, error) {
 	info, err := os.Lstat(path)
@@ -57,4 +63,69 @@ func ValidateSymlink(symlinkPath string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// GetCacheDir is similar to os.UserCacheDir, but always uses $XDG_CACHE_DIR if it is defined,
+// regardless of the OS. If this is not defined, the cache directory is that specified by
+// os.UserCacheDir. Note: does NOT guarantee the directory has been created yet.
+func GetCacheDir() (string, error) {
+	// Prioritize XDG_CACHE_HOME if it is defined
+	xdgCache := os.Getenv("XDG_CACHE_HOME")
+	if xdgCache != "" {
+		return filepath.Join(xdgCache, "trovl"), nil
+	}
+
+	base, err := os.UserCacheDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(base, "trovl"), nil
+}
+
+func CopyFile(src, dst string) error {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return fmt.Errorf("could not copy file: %v", err)
+	}
+
+	err = dstFile.Sync()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// BackupFile copies a file into the cache directory, and returns the path it was stored to.
+func BackupFile(path, timestampFormat string) (string, error) {
+	currTimeStr := time.Now().Format(timestampFormat)
+	cacheDir, err := GetCacheDir()
+	if err != nil {
+		return "", fmt.Errorf("could not get cache directory: %v", err)
+	}
+	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
+		return "", fmt.Errorf("could not create cache directory: %v", err)
+	}
+
+	base := filepath.Base(path)
+	ext := filepath.Ext(base)
+	name := strings.TrimSuffix(base, ext)
+
+	backupFilename := fmt.Sprintf("%s_backup_%s%s", name, currTimeStr, ext)
+	backupPath := filepath.Join(cacheDir, backupFilename)
+	if err := CopyFile(path, backupPath); err != nil {
+		return "", fmt.Errorf("could not backup file: %v", err)
+	}
+	return backupPath, nil
 }

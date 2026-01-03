@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"unicode"
 
-	"github.com/sneha-afk/trovl/internal/state"
+	. "github.com/sneha-afk/trovl/internal/state"
 	"github.com/sneha-afk/trovl/internal/utils"
 )
 
@@ -30,6 +30,7 @@ type Link struct {
 
 var ErrDryRun = errors.New("no-op: running dry-run")
 var ErrDeclinedOverwrite = errors.New("user declined overwriting existing file, no action taken")
+var ErrDeclinedBackup = errors.New("user declined backing up exisitng file to place new symlink, no action taken")
 
 // CleanLink defaults to using an absolute filepath, only relative if specified
 // Guaranteed that filepath.Clean has been called before returning
@@ -55,7 +56,7 @@ func CleanLink(raw string, useRelative bool) (string, error) {
 }
 
 // Construct a Link type and validate the target file exists.
-func Construct(state *state.TrovlState, targetPath, symlinkPath string) (Link, error) {
+func Construct(state *TrovlState, targetPath, symlinkPath string) (Link, error) {
 	targetFileInfo, err := utils.GetPathInfo(targetPath)
 	if !targetFileInfo.Exists || err != nil {
 		return Link{}, fmt.Errorf("invalid target path '%v': %v", targetPath, err)
@@ -83,43 +84,74 @@ func Construct(state *state.TrovlState, targetPath, symlinkPath string) (Link, e
 	// Conflict: existing file at the symlink position
 	if symlinkInfo.Exists {
 		if state.Options.DryRun {
-			state.Logger.Info("conflict with existing file", "link", symlinkPath)
+			state.Logger.Info("conflict with existing file", "link", symlinkPath, "existing_is_symlink", symlinkInfo.IsSymlink, "existing_is_dir", symlinkInfo.IsDir)
 			return Link{}, nil
 		}
 
-		if !symlinkInfo.IsSymlink {
-			// TODO: consider a backup feature if the existing target is a simple ordinary file
-			return Link{}, fmt.Errorf("existing file at symlink is not a symlink, exiting")
-		}
+		if symlinkInfo.IsSymlink {
+			shouldOverwrite := false
 
-		shouldOverwrite := false
-
-		if state.Options.OverwriteYes {
-			shouldOverwrite = true
-		} else if state.Options.OverwriteNo {
-			shouldOverwrite = false
-		} else {
-			if symlinkInfo.TargetPath == targetPath {
-				state.Logger.Warn(fmt.Sprintf("Symlink %v already exists and already points to %v, should it be overwritten? [y/N]", targetPath, symlinkPath))
+			if state.Options.OverwriteYes {
+				shouldOverwrite = true
+			} else if state.Options.OverwriteNo {
+				shouldOverwrite = false
 			} else {
-				state.Logger.Warn(fmt.Sprintf("Symlink %v already exists but points to another target (%v), should it be overwritten? [y/N]", symlinkInfo.TargetPath, symlinkPath))
+				if symlinkInfo.TargetPath == targetPath {
+					state.Logger.Warn(fmt.Sprintf("Symlink %v already exists and already points to %v, should it be overwritten? [y/N]", targetPath, symlinkPath))
+				} else {
+					state.Logger.Warn(fmt.Sprintf("Symlink %v already exists but points to another target (%v), should it be overwritten? [y/N]", symlinkInfo.TargetPath, symlinkPath))
+				}
+				fmt.Printf("> ")
+				var input = 'n'
+				if _, err := fmt.Scanf("%c\n", &input); err != nil {
+					return Link{}, fmt.Errorf("could not read input, no action taken: %v", err)
+				}
+				shouldOverwrite = unicode.ToLower(input) == 'y'
 			}
-			fmt.Printf("> ")
-			var input = 'n'
-			if _, err := fmt.Scanf("%c\n", &input); err != nil {
-				return Link{}, fmt.Errorf("could not read input, no action taken: %v", err)
-			}
-			shouldOverwrite = unicode.ToLower(input) == 'y'
-		}
 
-		if shouldOverwrite {
-			state.Logger.Warn("Overwriting existing file...")
-			if err := os.Remove(symlinkPath); err != nil {
-				return Link{}, fmt.Errorf("could not delete existing file: %v", err)
+			if shouldOverwrite {
+				state.Logger.Warn("Overwriting existing file...")
+				if err := os.Remove(symlinkPath); err != nil {
+					return Link{}, fmt.Errorf("could not delete existing file: %v", err)
+				}
+			} else {
+				state.Logger.Warn("Declined overwriting existing file, no action taken")
+				return Link{}, ErrDeclinedOverwrite
 			}
 		} else {
-			state.Logger.Warn("Declined overwriting existing file, no action taken")
-			return Link{}, ErrDeclinedOverwrite
+			if symlinkInfo.IsDir {
+				return Link{}, fmt.Errorf("existing file at symlink is a directory, exiting")
+			}
+
+			shouldBackup := false
+			if state.Options.BackupYes {
+				shouldBackup = true
+			} else if state.Options.BackupNo {
+				shouldBackup = false
+			} else {
+				state.Logger.Warn("Ordinary file exists at the specified symlink path, should it be backed up before placing the symlink? [y/N]")
+
+				fmt.Printf("> ")
+				var input = 'n'
+				if _, err := fmt.Scanf("%c\n", &input); err != nil {
+					return Link{}, fmt.Errorf("could not read input, no action taken: %v", err)
+				}
+				shouldBackup = unicode.ToLower(input) == 'y'
+			}
+
+			if shouldBackup {
+				backupPath, err := utils.BackupFile(symlinkPath, utils.FileTimeFormat)
+				if err != nil {
+					return Link{}, fmt.Errorf("could not backup file: %v", err)
+				}
+				state.Logger.Warn("Backed up original file, will be replaced by new symlink", "backup_file", backupPath)
+				if err := os.Remove(symlinkPath); err != nil {
+					return Link{}, fmt.Errorf("could not delete existing file: %v", err)
+				}
+			} else {
+				state.Logger.Warn("Declined backing up existing file, no action taken")
+				return Link{}, ErrDeclinedBackup
+			}
 		}
 	}
 
@@ -132,7 +164,7 @@ func Construct(state *state.TrovlState, targetPath, symlinkPath string) (Link, e
 
 // Add a symlink specified by the Link class.
 // Precondition: there is no existing file where the symlink was specified
-func Add(state *state.TrovlState, targetPath, symlinkPath string) error {
+func Add(state *TrovlState, targetPath, symlinkPath string) error {
 	targetPath, err := CleanLink(targetPath, state.Options.UseRelative)
 	if err != nil {
 		return fmt.Errorf("invalid path (target): %v", err)
@@ -157,7 +189,7 @@ func Add(state *state.TrovlState, targetPath, symlinkPath string) error {
 
 // RemoveByPath takes in the path to a symlink to remove, while keeping the original
 // file intact (note: target file is not checked for existence as the symlink is being removed.)
-func RemoveByPath(state *state.TrovlState, path string) error {
+func RemoveByPath(state *TrovlState, path string) error {
 	path, err := CleanLink(path, true)
 	if err != nil {
 		return fmt.Errorf("invalid path (symlink): %v", err)

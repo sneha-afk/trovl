@@ -11,15 +11,17 @@ import (
 	"github.com/mattn/go-isatty"
 )
 
-const logTimeFormat = "2006-01-02 15:04:05"
+const LogTimeFormat = "2006-01-02 15:04:05"
 
 type TrovlOptions struct {
 	Verbose      bool
 	Debug        bool
+	DryRun       bool
 	UseRelative  bool
 	OverwriteYes bool
 	OverwriteNo  bool
-	DryRun       bool
+	BackupYes    bool
+	BackupNo     bool
 }
 
 type TrovlState struct {
@@ -65,7 +67,7 @@ func New(opts *TrovlOptions) *TrovlState {
 		Level:     lvl,
 		AddSource: opts.Debug,
 		// TimeFormat: time.RFC3339,
-		TimeFormat: logTimeFormat,
+		TimeFormat: LogTimeFormat,
 		NoColor:    !isatty.IsTerminal(os.Stderr.Fd()),
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			// Print error keys in red
