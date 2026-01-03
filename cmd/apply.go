@@ -48,7 +48,7 @@ var applyCmd = &cobra.Command{
 		}
 
 	},
-	Aliases: []string{"execute", "run", "do"},
+	Aliases: []string{"exec", "run", "do"},
 	Example: "trovl apply .trovl",
 }
 

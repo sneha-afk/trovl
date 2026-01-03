@@ -28,6 +28,7 @@ type Link struct {
 	Type      LinkType `json:"link_type"`
 }
 
+var ErrDryRun = errors.New("no-op: running dry-run")
 var ErrDeclinedOverwrite = errors.New("user declined overwriting existing file, no action taken")
 
 // CleanLink defaults to using an absolute filepath, only relative if specified
@@ -82,7 +83,7 @@ func Construct(state *state.TrovlState, targetPath, symlinkPath string) (Link, e
 	// Conflict: existing file at the symlink position
 	if symlinkInfo.Exists {
 		if state.Options.DryRun {
-			state.Logger.Info("[DRY-RUN] conflict with existing file", "link", symlinkPath)
+			state.Logger.Info("conflict with existing file", "link", symlinkPath)
 			return Link{}, nil
 		}
 
@@ -142,17 +143,16 @@ func Add(state *state.TrovlState, targetPath, symlinkPath string) error {
 	}
 
 	link, err := Construct(state, targetPath, symlinkPath)
-	if err != nil {
+	if err != nil && err != ErrDryRun {
 		return fmt.Errorf("failed to construct link: %v", err)
 	}
 
+	state.Logger.Info("construct symlink", "target", targetPath, "link", symlinkPath)
+
 	if state.Options.DryRun {
-		state.Logger.Info("[DRY-RUN] would create symlink", "target", targetPath, "link", symlinkPath)
 		return nil
 	}
-
-	err = os.Symlink(link.Target, link.LinkMount)
-	return err
+	return os.Symlink(link.Target, link.LinkMount)
 }
 
 // RemoveByPath takes in the path to a symlink to remove, while keeping the original
@@ -175,10 +175,10 @@ func RemoveByPath(state *state.TrovlState, path string) error {
 		return fmt.Errorf("invalid symlink: %v", err)
 	}
 
+	state.Logger.Info("remove symlink", "link", path)
+
 	if state.Options.DryRun {
-		state.Logger.Info("[DRY-RUN] would remove symlink", "link", path)
 		return nil
 	}
-
 	return os.Remove(path)
 }

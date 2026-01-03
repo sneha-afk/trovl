@@ -1,3 +1,6 @@
+/*
+Package state defines the global state and options used by all commands.
+*/
 package state
 
 import (
@@ -65,14 +68,25 @@ func New(opts *TrovlOptions) *TrovlState {
 		TimeFormat: logTimeFormat,
 		NoColor:    !isatty.IsTerminal(os.Stderr.Fd()),
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			// Print error keys in red
 			if a.Value.Kind() == slog.KindAny {
 				if _, ok := a.Value.Any().(error); ok {
 					return tint.Attr(9, a)
 				}
 			}
+
+			// Add a [DRY-RUN] tag
+			if a.Key == slog.MessageKey && opts.DryRun {
+				return slog.String(a.Key, "[DRY-RUN] "+a.Value.String())
+			}
+
 			return a
 		},
 	}))
+
+	if opts.DryRun {
+		logger = logger.With("dry_run", true)
+	}
 
 	state := TrovlState{
 		Options: opts,

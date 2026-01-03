@@ -28,7 +28,7 @@ var addCmd = &cobra.Command{
 		}
 	},
 	Args:    cobra.MinimumNArgs(2),
-	Aliases: []string{"link", "create"},
+	Aliases: []string{"link", "create", "new"},
 	Example: "trovl add ~/dotfiles/.vimrc ~/.vimrc",
 }
 

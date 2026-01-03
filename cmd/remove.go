@@ -20,13 +20,13 @@ var removeCmd = &cobra.Command{
 				os.Exit(1)
 			}
 
-			if State.Verbose() {
+			if !State.Options.DryRun {
 				State.Logger.Info("Successfully removed symlink", "link", symlink)
 			}
 		}
 	},
 	Args:    cobra.MinimumNArgs(1),
-	Aliases: []string{"unlink", "delete"},
+	Aliases: []string{"unlink", "delete", "rm", "del"},
 	Example: "trovl remove ~/.vimrc (where it is a symlink)",
 }
 
