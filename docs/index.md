@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # trovl
 
 trovl is a command-line tool designed to simplify the management of symbolic links across different operating systems. It helps you maintain consistent file configurations across Linux, macOS, and Windows by handling platform-specific path differences automatically.
@@ -52,8 +56,8 @@ trovl apply manifest.json
 
 ## Getting Started
 
-- [Installation](installation.md) - Install trovl on your system
-- [Quick Start](quickstart.md) - Get up and running in minutes
+- [Installation](./install.md) - Install trovl on your system
+- [Quick Start](./quickstart.md) - Get up and running in minutes
 - [Commands](commands.md) - Complete command reference
 - [Examples](examples.md) - Real-world usage examples
 

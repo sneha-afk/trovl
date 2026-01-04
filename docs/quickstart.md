@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # quickstart
 
 This guide will get you up and running with trovl in minutes.

@@ -1,6 +1,20 @@
 title: trovl
 description: documentation for the trovl CLI
-remote-theme: just-the-docs
 
 markdown: kramdown
 permalink: pretty
+
+plugins:
+  - jekyll-remote-theme
+remote_theme: vaibhavvikas/jekyll-theme-minimalistic
+color-scheme: auto
+
+navigation:
+  - name: home
+    link: ./index.html
+  - name: installation
+    link: ./install.html
+  - name: quickstart
+    link: ./quickstart.html
+  - name: commands
+    link: ./commands.html

@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # installation
 
 ## Using Go toolchain (recommended!)

@@ -19,7 +19,11 @@ var defaultFiles = []string{
 var applyCmd = &cobra.Command{
 	Use:   "apply <manifest_file> [more_manifests]",
 	Short: "Applies a link list specified by schema.",
-	Long:  `Applies a link list specified by schema to bulk add links or fix as needed.`,
+	Long: `Applies a link list specified by schema to bulk add links or fix as needed.
+
+When backing up a file that would be overwritten by this new symlink, trovl always uses $XDG_CACHE_DIR first, before
+falling back to OS defaults. See [trovl's use of environment variables](../commands.md/#environment-variables) to learn more.
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Find one of the default filepaths to apply
 		if len(args) <= 0 {

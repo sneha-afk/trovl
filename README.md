@@ -19,7 +19,7 @@ Requirements:
 - `curl` (can also be substituted with `Invoke-WebRequest/iwr` on Windows)
 - `tar` or `Expand-Archive` (i.e any archive tool)
 
-See [INSTALL.md](./INSTALL.md) for all directions.
+See [INSTALL.md](./docs/install.md) for all directions.
 
 <details>
 <summary>Example install for linux-amd64</summary>
@@ -100,29 +100,7 @@ See the full [schema documentation](https://github.com/sneha-afk/trovl/blob/main
 | `help` | Display help for any command |
 | `--version` | Show version information |
 
-## Global Flags
-
-- `--debug` - Show debug information (file paths, line numbers)
-- `--verbose` - Display verbose output
-- `--help` - Show help information
-
-## Shell Completion
-
-Generate completion scripts for your shell:
-
-```bash
-# Bash
-trovl completion bash > /etc/bash_completion.d/trovl
-
-# Zsh
-trovl completion zsh > "${fpath[1]}/_trovl"
-
-# Fish
-trovl completion fish > ~/.config/fish/completions/trovl.fish
-
-# PowerShell
-trovl completion powershell > trovl.ps1 # then source in $PROFILE
-```
+See the full documentation at [./docs/commands.md].
 
 ## Contributing
 

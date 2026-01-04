@@ -6,6 +6,10 @@ Applies a link list specified by schema.
 
 Applies a link list specified by schema to bulk add links or fix as needed.
 
+When backing up a file that would be overwritten by this new symlink, trovl always uses $XDG_CACHE_DIR first, before
+falling back to OS defaults. See [trovl's use of environment variables](../commands.md/#environment-variables) to learn more.
+
+
 ```
 trovl apply <manifest_file> [more_manifests] [flags]
 ```

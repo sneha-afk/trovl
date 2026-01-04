@@ -47,6 +47,11 @@ tasks:
       - task: fmt
       - task: test
 
+  docgen:
+    desc: Auto-generate docs for the Cobra comamnds
+    cmds:
+      - go run ./internal/tools/docgen -out ./docs/cli -format markdown
+
   install:
     desc: Install to GOBIN (usually ~/go/bin)
     cmds:
