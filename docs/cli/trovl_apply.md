@@ -12,7 +12,7 @@ manifest file is not applied (i.e, this process happens only upon trovl apply)
 
 When backing up a file that would be overwritten by this new symlink, trovl always uses $XDG_CACHE_HOME first, before
 falling back to OS defaults. The backup directory is $XDG_CACHE_HOME/trovl/backups.
-See [trovl's use of environment variables](../configuration/#environment-variables) to learn more.
+See [trovl's use of environment variables](/trovl/configuration/#environment-variables) to learn more.
 
 
 ```
