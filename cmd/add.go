@@ -44,6 +44,7 @@ func init() {
 	addCmd.Flags().BoolVar(&cfg.OverwriteNo, "no-overwrite", false, "do not overwrite any existing symlinks")
 	addCmd.Flags().BoolVar(&cfg.BackupYes, "backup", false, "backup existing single files if a symlink would overwrite it")
 	addCmd.Flags().BoolVar(&cfg.BackupYes, "no-backup", false, "do not backup existing files and abandon symlink creation")
+	addCmd.Flags().StringVar(&cfg.BackupDir, "backup-dir", "", "specify where to backup files (default: $XDG_CACHE_HOME/trovl/backups)")
 
 	addCmd.MarkFlagsMutuallyExclusive("overwrite", "no-overwrite")
 	addCmd.MarkFlagsMutuallyExclusive("backup", "no-backup")

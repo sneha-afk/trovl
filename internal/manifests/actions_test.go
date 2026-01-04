@@ -13,6 +13,7 @@ import (
 
 var differentOS string
 var teststate *state.TrovlState
+var backupDir string
 
 var (
 	validSingleLink              = `{"links":[{"target":"actual_file","link":"test_symlink"}]}`
@@ -527,9 +528,21 @@ func TestApply(t *testing.T) {
 				BackupYes: true,
 			},
 			setup: func(tmpDir string) {
+				var err error
 				os.WriteFile(filepath.Join(tmpDir, "actual_file"), []byte("content"), 0644)
 				// ordinary file
 				os.WriteFile(filepath.Join(tmpDir, "test_symlink"), []byte("existing"), 0644)
+
+				backupDir, err = utils.GetCacheDir()
+				if err != nil {
+					t.Errorf("could not setup backup directory: %v", err)
+					return
+				}
+				backupDir = filepath.Join(backupDir, "trovl", "backups")
+				if err := os.MkdirAll(backupDir, 0755); err != nil {
+					t.Errorf("could not create backup parent directory: %v", err)
+					return
+				}
 			},
 			validate: func(t *testing.T, tmpDir string) {
 				symlinkPath := filepath.Join(tmpDir, "test_symlink")
@@ -542,14 +555,6 @@ func TestApply(t *testing.T) {
 					t.Error("link is not a symlink")
 				}
 
-				// Verify original file was backed up to cache
-				backupDir, err := utils.GetCacheDir()
-				if err != nil {
-					t.Errorf("could not setup backup directory: %v", err)
-					return
-				}
-
-				// Check that backup directory exists and contains the file
 				entries, err := os.ReadDir(backupDir)
 				if err != nil {
 					t.Errorf("backup directory not accessible: %v", err)

@@ -11,7 +11,8 @@ is not set, trovl then checks ~/.config/trovl/manifest.json (on all OSes). If an
 manifest file is not applied (i.e, this process happens only upon trovl apply)
 
 When backing up a file that would be overwritten by this new symlink, trovl always uses $XDG_CACHE_HOME first, before
-falling back to OS defaults. See [trovl's use of environment variables](../configuration/#environment-variables) to learn more.
+falling back to OS defaults. The backup directory is $XDG_CACHE_HOME/trovl/backups.
+See [trovl's use of environment variables](../configuration/#environment-variables) to learn more.
 
 
 ```
@@ -27,11 +28,12 @@ trovl apply .trovl
 ### Options
 
 ```
-      --backup         backup existing single files if a symlink would overwrite it
-  -h, --help           help for apply
-      --no-backup      do not backup existing files and abandon symlink creation
-      --no-overwrite   do not overwrite any existing symlinks
-      --overwrite      overwrite any existing symlinks
+      --backup              backup existing single files if a symlink would overwrite it
+      --backup-dir string   specify where to backup files (default: $XDG_CACHE_HOME/trovl/backups)
+  -h, --help                help for apply
+      --no-backup           do not backup existing files and abandon symlink creation
+      --no-overwrite        do not overwrite any existing symlinks
+      --overwrite           overwrite any existing symlinks
 ```
 
 ### Options inherited from parent commands

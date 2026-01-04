@@ -126,22 +126,20 @@ func CopyFile(src, dst string) error {
 }
 
 // BackupFile copies a file into the cache directory, and returns the path it was stored to.
-func BackupFile(path, timestampFormat string) (string, error) {
+// Default backup directory: $XDG_CACHE_HOME/trovl/backups
+func BackupFile(path, backupDir, timestampFormat string) (string, error) {
 	currTimeStr := time.Now().Format(timestampFormat)
-	cacheDir, err := GetCacheDir()
-	if err != nil {
-		return "", fmt.Errorf("could not get cache directory: %v", err)
-	}
-	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
-		return "", fmt.Errorf("could not create cache directory: %v", err)
-	}
-
 	base := filepath.Base(path)
 	ext := filepath.Ext(base)
 	name := strings.TrimSuffix(base, ext)
 
 	backupFilename := fmt.Sprintf("%s_backup_%s%s", name, currTimeStr, ext)
-	backupPath := filepath.Join(cacheDir, backupFilename)
+	backupPath := filepath.Join(backupDir, backupFilename)
+
+	if err := os.MkdirAll(filepath.Dir(backupPath), 0755); err != nil {
+		return "", fmt.Errorf("could not create backup parent directory: %v", err)
+	}
+
 	if err := CopyFile(path, backupPath); err != nil {
 		return "", fmt.Errorf("could not backup file: %v", err)
 	}

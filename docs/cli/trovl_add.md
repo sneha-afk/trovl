@@ -23,12 +23,13 @@ trovl add ~/dotfiles/.vimrc ~/.vimrc
 ### Options
 
 ```
-      --backup         backup existing single files if a symlink would overwrite it
-  -h, --help           help for add
-      --no-backup      do not backup existing files and abandon symlink creation
-      --no-overwrite   do not overwrite any existing symlinks
-      --overwrite      overwrite any existing symlinks
-      --relative       retain relative paths to target
+      --backup              backup existing single files if a symlink would overwrite it
+      --backup-dir string   specify where to backup files (default: $XDG_CACHE_HOME/trovl/backups)
+  -h, --help                help for add
+      --no-backup           do not backup existing files and abandon symlink creation
+      --no-overwrite        do not overwrite any existing symlinks
+      --overwrite           overwrite any existing symlinks
+      --relative            retain relative paths to target
 ```
 
 ### Options inherited from parent commands

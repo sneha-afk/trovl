@@ -22,7 +22,8 @@ is not set, trovl then checks ~/.config/trovl/manifest.json (on all OSes). If an
 manifest file is not applied (i.e, this process happens only upon trovl apply)
 
 When backing up a file that would be overwritten by this new symlink, trovl always uses $XDG_CACHE_HOME first, before
-falling back to OS defaults. See [trovl's use of environment variables](../configuration/#environment-variables) to learn more.
+falling back to OS defaults. The backup directory is $XDG_CACHE_HOME/trovl/backups.
+See [trovl's use of environment variables](../configuration/#environment-variables) to learn more.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Find one of the default filepaths to apply
@@ -75,6 +76,7 @@ func init() {
 	applyCmd.Flags().BoolVar(&cfg.OverwriteNo, "no-overwrite", false, "do not overwrite any existing symlinks")
 	applyCmd.Flags().BoolVar(&cfg.BackupYes, "backup", false, "backup existing single files if a symlink would overwrite it")
 	applyCmd.Flags().BoolVar(&cfg.BackupYes, "no-backup", false, "do not backup existing files and abandon symlink creation")
+	applyCmd.Flags().StringVar(&cfg.BackupDir, "backup-dir", "", "specify where to backup files (default: $XDG_CACHE_HOME/trovl/backups)")
 
 	applyCmd.MarkFlagsMutuallyExclusive("overwrite", "no-overwrite")
 	applyCmd.MarkFlagsMutuallyExclusive("backup", "no-backup")

@@ -140,7 +140,19 @@ func Construct(state *TrovlState, targetPath, symlinkPath string) (Link, error) 
 			}
 
 			if shouldBackup {
-				backupPath, err := utils.BackupFile(symlinkPath, utils.FileTimeFormat)
+				backupDir := state.Options.BackupDir
+				if state.Options.BackupDir == "" {
+					cacheDir, err := utils.GetCacheDir()
+					if err != nil {
+						return Link{}, fmt.Errorf("could not get cache directory: %v", err)
+					}
+					if err := os.MkdirAll(cacheDir, 0o755); err != nil {
+						return Link{}, fmt.Errorf("could not create cache directory: %v", err)
+					}
+					backupDir = filepath.Join(cacheDir, "trovl", "backups")
+				}
+
+				backupPath, err := utils.BackupFile(symlinkPath, backupDir, utils.FileTimeFormat)
 				if err != nil {
 					return Link{}, fmt.Errorf("could not backup file: %v", err)
 				}
