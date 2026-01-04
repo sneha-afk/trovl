@@ -1,6 +1,5 @@
 title: trovl
 description: Documentation for the trovl CLI
-url: https://sneha-afk.github.io/trovl/
 
 permalink: pretty
 
@@ -11,22 +10,22 @@ color-scheme: auto
 
 navigation:
   - name: Home
-    link: /
+    link: "/trovl/"
   - name: Installation
-    link: /installation/
+    link: "/trovl/installation/"
   - name: Quickstart
-    link: /quickstart/
+    link: "/trovl/quickstart/"
   - name: Commands
-    link: /commands/
+    link: "/trovl/commands/"
     sublist:
       - name: add
-        link: /cli/trovl_add/
+        link: "/trovl/cli/trovl_add/"
       - name: apply
-        link: /cli/trovl_apply/
+        link: "/trovl/cli/trovl_apply/"
       - name: plan
-        link: /cli/trovl_plan/
+        link: "/trovl/cli/trovl_plan/"
       - name: remove
-        link: /cli/trovl_remove/
+        link: "/trovl/cli/trovl_remove/"
 
 defaults:
   - scope:
