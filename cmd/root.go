@@ -41,6 +41,8 @@ func Execute(version string) {
 	}
 }
 
+func Root() *cobra.Command { return rootCmd }
+
 func init() {
 	State = state.DefaultState()
 	rootCmd.PersistentFlags().BoolVarP(&cfg.Verbose, "verbose", "v", false, "have verbose outputs for actions taken")

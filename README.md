@@ -2,29 +2,9 @@
 
 A simple, cross-platform symlink manager that eliminates the pain of managing symlinks across different operating systems.
 
-## Why trovl?
-
-Tired of dealing with:
-- Different symlink syntax across Windows, Linux, and macOS?
-- Platform-specific symlink locations or names (like `~/.vimrc` vs `~/_vimrc`)?
-- Manually managing dozens of symlinks for various programs and configurations?
-
-**trovl** provides:
-- **Cross-platform support** - Windows, Linux, macOS (amd64 & arm64)
-- **Platform-specific overrides** - Different link paths per OS
-- **True symlinks** - Uses native symlink APIs when possible
-- **Schema-based management** - Define all your symlinks in one JSON file to perform bulk operations, perfect for dotfiles!
-
-### And why not others?
-
-`trovl` is *symlink-first* and keeps the current filesystem as the source of truth for actions to take. Running `trovl` is primarily through explicit commands and manifest-driven sequences which allows for easy migrations and clear intentions.
-
-[GNU `stow`](https://www.gnu.org/software/stow/) is the most direct inspiration for `trovl` and its design principles.
-
-
 ## Installation
 
-See [INSTALL.md](./INSTALL.md) for detailed installation instructions including pre-built binaries.
+See [INSTALL.md](./docs/install.md) for detailed installation instructions including pre-built binaries.
 
 ### Recommended: install with Go
 ```bash

@@ -21,7 +21,9 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/sneha-afk/trovl/cmd"
+import (
+	"github.com/sneha-afk/trovl/cmd"
+)
 
 var version string = "dev"
 

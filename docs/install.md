@@ -1,4 +1,4 @@
-# Installation
+# installation
 
 ## Using Go toolchain (recommended!)
 
