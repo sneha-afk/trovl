@@ -144,7 +144,11 @@ func (m *Manifest) Apply(state *state.TrovlState) error {
 		}
 
 		err := links.Add(state, link.Target, linkToUse)
-		if err != nil && !errors.Is(err, links.ErrDeclinedOverwrite) {
+		if errors.Is(err, links.ErrDeclinedOverwrite) || errors.Is(err, links.ErrDeclinedBackup) {
+			err = nil
+			continue
+		}
+		if err != nil {
 			return fmt.Errorf("links[%d]: %w", i, err)
 		}
 

@@ -176,6 +176,9 @@ func Add(state *TrovlState, targetPath, symlinkPath string) error {
 
 	link, err := Construct(state, targetPath, symlinkPath)
 	if err != nil && err != ErrDryRun {
+		if errors.Is(err, ErrDeclinedOverwrite) || errors.Is(err, ErrDeclinedBackup) {
+			return err
+		}
 		return fmt.Errorf("failed to construct link: %v", err)
 	}
 

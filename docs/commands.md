@@ -97,10 +97,11 @@ trovl supports the following platforms for `platforms` field in manifests:
 
 trovl respects the following environment variables:
 
-- `XDG_CACHE_DIR` - Cache directory for backups: trovl will always respect what is set for `$XDG_CACHE_DIR` first before following back to [Go's defaults](https://pkg.go.dev/os#UserCacheDir):
+- `XDG_CACHE_HOME` - Cache directory for backups: trovl will always respect what is set for `$XDG_CACHE_HOME` first before following back to [Go's defaults](https://pkg.go.dev/os#UserCacheDir):
     - Unix: `$HOME/.cache`
     - Darwin (macOS): `$HOME/Library/Caches`
     - Windows: `%LocalAppData%`
+- `XDG_CONFIG_HOME` - Config directory: trovl will always respect what is set for `$XDG_CONFIG_HOME` first before falling back to `~/.config` for all OSes
 
 ## Configuration Files
 

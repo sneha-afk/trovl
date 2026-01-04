@@ -123,6 +123,7 @@ func TestAdd(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmp := t.TempDir()
+			t.Setenv("XDG_CONFIG_HOME", tmp)
 			t.Setenv("XDG_CACHE_HOME", tmp)
 
 			targetPath := filepath.Join(tmp, "target.txt")

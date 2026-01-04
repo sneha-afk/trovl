@@ -6,9 +6,9 @@ Adds a symlink that points to the target file
 
 When possible, add a true symlink (as in, not a junction or hard link) to a target file.
 
-When backing up a file that would be overwritten by this new symlink, trovl always uses $XDG_CACHE_DIR first, before
+When backing up a file that would be overwritten by this new symlink, trovl always uses $XDG_CACHE_HOME first, before
 falling back to OS defaults. See [trovl's use of environment variables](../commands.md/#environment-variables) to learn more.
-	
+
 
 ```
 trovl add <target> <symlink> [target2, symlink2, ...] [flags]

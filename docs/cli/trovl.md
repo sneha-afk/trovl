@@ -21,7 +21,7 @@ and true-symlinking when possible.
 ### SEE ALSO
 
 * [trovl add](trovl_add.md)	 - Adds a symlink that points to the target file
-* [trovl apply](trovl_apply.md)	 - Applies a link list specified by schema.
+* [trovl apply](trovl_apply.md)	 - Applies a link list specified by schema. Defaults to $XDG_CONFIG_HOME/trovl/manifest.json (or ~/.config/trovl/manifest.json) if no manifest is specified.
 * [trovl plan](trovl_plan.md)	 - Describes what will happen during an `apply` without modifying the filesystem
 * [trovl remove](trovl_remove.md)	 - Removes a specified symlink while keeping the target file as-is.
 

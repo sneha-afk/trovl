@@ -65,7 +65,7 @@ func ValidateSymlink(symlinkPath string) (bool, error) {
 	return true, nil
 }
 
-// GetCacheDir is similar to os.UserCacheDir, but always uses $XDG_CACHE_DIR if it is defined,
+// GetCacheDir is similar to os.UserCacheDir, but always uses $XDG_CACHE_HOME if it is defined,
 // regardless of the OS. If this is not defined, the cache directory is that specified by
 // os.UserCacheDir. Note: does NOT guarantee the directory has been created yet.
 func GetCacheDir() (string, error) {
@@ -80,6 +80,24 @@ func GetCacheDir() (string, error) {
 		return "", err
 	}
 	return filepath.Join(base, "trovl"), nil
+}
+
+// GetConfigDir returns the path to the trovl config directory.
+// It prioritizes $XDG_CONFIG_HOME if defined, otherwise falls back to ~/.config (on all OSes)
+// Note: this does NOT guarantee that the directory exists yet.
+func GetConfigDir() (string, error) {
+	// Prioritize XDG_CONFIG_HOME if set
+	xdgConfig := os.Getenv("XDG_CONFIG_HOME")
+	if xdgConfig != "" {
+		return filepath.Join(xdgConfig, "trovl"), nil
+	}
+
+	// Fallback to ~/.config
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(homeDir, ".config", "trovl"), nil
 }
 
 func CopyFile(src, dst string) error {

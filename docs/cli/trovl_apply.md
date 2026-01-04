@@ -1,13 +1,17 @@
 ## trovl apply
 
-Applies a link list specified by schema.
+Applies a link list specified by schema. Defaults to $XDG_CONFIG_HOME/trovl/manifest.json (or ~/.config/trovl/manifest.json) if no manifest is specified.
 
 ### Synopsis
 
 Applies a link list specified by schema to bulk add links or fix as needed.
 
-When backing up a file that would be overwritten by this new symlink, trovl always uses $XDG_CACHE_DIR first, before
-falling back to OS defaults. See [trovl's use of environment variables](../commands.md/#environment-variables) to learn more.
+By default, trovl looks for a manifest in $XDG_CONFIG_HOME/trovl/manifest.json (typically ~/.config/trovl/manifest.json). If $XDG_CONFIG_HOME
+is not set, trovl then checks ~/.config/trovl/manifest.json (on all OSes). If any manifest is specified into the command, the default
+manifest file is not applied (i.e, this process happens only upon trovl apply)
+
+When backing up a file that would be overwritten by this new symlink, trovl always uses $XDG_CACHE_HOME first, before
+falling back to OS defaults. See [trovl's use of environment variables](../commands/#environment-variables) to learn more.
 
 
 ```

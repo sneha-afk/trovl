@@ -7,12 +7,13 @@ plugins:
   - jekyll-remote-theme
 remote_theme: vaibhavvikas/jekyll-theme-minimalistic
 color-scheme: auto
+color_scheme: auto
 
 navigation:
   - name: Home
     link: "/trovl/"
   - name: Installation
-    link: "/trovl/installation/"
+    link: "/trovl/install/"
   - name: Quickstart
     link: "/trovl/quickstart/"
   - name: Commands

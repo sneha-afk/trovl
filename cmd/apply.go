@@ -2,39 +2,51 @@ package cmd
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/sneha-afk/trovl/internal/manifests"
 	"github.com/sneha-afk/trovl/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-// Paths to resolve when there are no arguments passed in
-var defaultFiles = []string{
-	".trovl",
-	"trovl.json",
-	".trovl.json",
-}
+var defaultFile = "manifest.json"
 
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
 	Use:   "apply <manifest_file> [more_manifests]",
-	Short: "Applies a link list specified by schema.",
+	Short: "Applies a link list specified by schema. Defaults to $XDG_CONFIG_HOME/trovl/manifest.json (or ~/.config/trovl/manifest.json) if no manifest is specified.",
 	Long: `Applies a link list specified by schema to bulk add links or fix as needed.
 
-When backing up a file that would be overwritten by this new symlink, trovl always uses $XDG_CACHE_DIR first, before
-falling back to OS defaults. See [trovl's use of environment variables](../commands.md/#environment-variables) to learn more.
+By default, trovl looks for a manifest in $XDG_CONFIG_HOME/trovl/manifest.json (typically ~/.config/trovl/manifest.json). If $XDG_CONFIG_HOME
+is not set, trovl then checks ~/.config/trovl/manifest.json (on all OSes). If any manifest is specified into the command, the default
+manifest file is not applied (i.e, this process happens only upon trovl apply)
+
+When backing up a file that would be overwritten by this new symlink, trovl always uses $XDG_CACHE_HOME first, before
+falling back to OS defaults. See [trovl's use of environment variables](../commands/#environment-variables) to learn more.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Find one of the default filepaths to apply
 		if len(args) <= 0 {
-			for _, path := range defaultFiles {
-				info, err := utils.GetPathInfo(path)
-				if !info.Exists || err != nil {
-					continue
-				}
+			configDir, err := utils.GetConfigDir()
+			if err != nil {
+				State.Logger.Error("Could not read config directory", "error", err)
+			}
+			path := filepath.Join(configDir, defaultFile)
 
-				args = append(args, path)
-				break
+			defaultManifest, err := manifests.New(path)
+			if err != nil {
+				if err == os.ErrNotExist {
+					State.Logger.Error("Did not find manifest at the default location", "defaultLocation", path)
+				} else {
+					State.Logger.Error("Error reading the default manifest", "error", err)
+				}
+				cmd.Help()
+				os.Exit(1)
+			}
+
+			if err := defaultManifest.Apply(State); err != nil {
+				State.Logger.Error("Could not apply default manifest file", "error", err)
+				os.Exit(1)
 			}
 		}
 

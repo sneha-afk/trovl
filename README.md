@@ -87,6 +87,8 @@ Then apply all links at once:
 trovl apply .trovl.json # can be named anything!
 ```
 
+Running `trovl apply` with no arguments will apply the *default manifest* located at `$XDG_CONFIG_HOME/trovl/manifest.json` or `~/.config/trovl/manifest.json` on any OS.
+
 See the full [schema documentation](https://github.com/sneha-afk/trovl/blob/main/docs/trovl_schema.json) for all available options.
 
 ## Commands

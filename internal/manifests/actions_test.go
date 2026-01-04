@@ -574,9 +574,9 @@ func TestApply(t *testing.T) {
 			},
 		},
 		{
-			name:    "BackupNo - errors on existing regular file",
+			name:    "BackupNo - no error on existing regular file (continues on manifest)",
 			content: validSingleLink,
-			wantErr: true,
+			wantErr: false,
 			options: &state.TrovlOptions{
 				BackupNo: true,
 			},
@@ -585,6 +585,15 @@ func TestApply(t *testing.T) {
 				os.WriteFile(filepath.Join(tmpDir, "actual_file"), []byte("content"), 0644)
 				// Create existing file at symlink location
 				os.WriteFile(filepath.Join(tmpDir, "test_symlink"), []byte("existing"), 0644)
+			},
+			validate: func(t *testing.T, tmpDir string) {
+				data, err := os.ReadFile(filepath.Join(tmpDir, "test_symlink"))
+				if err != nil {
+					t.Fatalf("expected file to exist: %v", err)
+				}
+				if string(data) != "existing" {
+					t.Fatalf("expected file contents to remain unchanged, got: %q", string(data))
+				}
 			},
 		},
 		{
@@ -618,6 +627,8 @@ func TestApply(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
+			t.Setenv("XDG_CONFIG_HOME", tmpDir)
+			t.Setenv("XDG_CACHE_HOME", tmpDir)
 			manifestPath := filepath.Join(tmpDir, "manifest.json")
 
 			if err := os.WriteFile(manifestPath, []byte(tt.content), 0644); err != nil {
