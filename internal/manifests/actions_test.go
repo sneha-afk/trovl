@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/sneha-afk/trovl/internal/state"
+	"github.com/sneha-afk/trovl/internal/utils"
 )
 
 var differentOS string
@@ -516,6 +517,100 @@ func TestApply(t *testing.T) {
 						t.Errorf("unexpected error checking %s: %v", name, err)
 					}
 				}
+			},
+		},
+		{
+			name:    "BackupYes - backs up existing regular file",
+			content: validSingleLink,
+			wantErr: false,
+			options: &state.TrovlOptions{
+				BackupYes: true,
+			},
+			setup: func(tmpDir string) {
+				os.WriteFile(filepath.Join(tmpDir, "actual_file"), []byte("content"), 0644)
+				// ordinary file
+				os.WriteFile(filepath.Join(tmpDir, "test_symlink"), []byte("existing"), 0644)
+			},
+			validate: func(t *testing.T, tmpDir string) {
+				symlinkPath := filepath.Join(tmpDir, "test_symlink")
+				info, err := os.Lstat(symlinkPath)
+				if err != nil {
+					t.Errorf("symlink not created: %v", err)
+					return
+				}
+				if info.Mode()&os.ModeSymlink == 0 {
+					t.Error("link is not a symlink")
+				}
+
+				// Verify original file was backed up to cache
+				backupDir, err := utils.GetCacheDir()
+				if err != nil {
+					t.Errorf("could not setup backup directory: %v", err)
+					return
+				}
+
+				// Check that backup directory exists and contains the file
+				entries, err := os.ReadDir(backupDir)
+				if err != nil {
+					t.Errorf("backup directory not accessible: %v", err)
+					return
+				}
+				if len(entries) == 0 {
+					t.Error("no backup files found")
+				}
+			},
+		},
+		{
+			name:    "BackupYes - errors on existing directory",
+			content: validSingleLink,
+			wantErr: true,
+			options: &state.TrovlOptions{
+				BackupYes: true,
+			},
+			setup: func(tmpDir string) {
+				os.WriteFile(filepath.Join(tmpDir, "actual_file"), []byte("content"), 0644)
+				// directory
+				os.Mkdir(filepath.Join(tmpDir, "test_symlink"), 0755)
+			},
+		},
+		{
+			name:    "BackupNo - errors on existing regular file",
+			content: validSingleLink,
+			wantErr: true,
+			options: &state.TrovlOptions{
+				BackupNo: true,
+			},
+			setup: func(tmpDir string) {
+				// Create source file
+				os.WriteFile(filepath.Join(tmpDir, "actual_file"), []byte("content"), 0644)
+				// Create existing file at symlink location
+				os.WriteFile(filepath.Join(tmpDir, "test_symlink"), []byte("existing"), 0644)
+			},
+		},
+		{
+			name:    "BackupNo - errors on existing directory",
+			content: validSingleLink,
+			wantErr: true,
+			options: &state.TrovlOptions{
+				BackupNo: true,
+			},
+			setup: func(tmpDir string) {
+				// Create source file
+				os.WriteFile(filepath.Join(tmpDir, "actual_file"), []byte("content"), 0644)
+				// Create existing directory at symlink location
+				os.Mkdir(filepath.Join(tmpDir, "test_symlink"), 0755)
+			},
+		},
+		{
+			name:    "no backup/overwrite option set (eof during tests) - errors on existing file",
+			content: validSingleLink,
+			wantErr: true,
+			options: &state.TrovlOptions{},
+			setup: func(tmpDir string) {
+				// Create source file
+				os.WriteFile(filepath.Join(tmpDir, "actual_file"), []byte("content"), 0644)
+				// Create existing file at symlink location
+				os.WriteFile(filepath.Join(tmpDir, "test_symlink"), []byte("existing"), 0644)
 			},
 		},
 	}
