@@ -4,7 +4,7 @@ layout: default
 
 # trovl
 
-trovl is a command-line tool designed to simplify the management of symbolic links across different operating systems. It helps you maintain consistent file configurations across Linux, macOS, and Windows by handling platform-specific path differences automatically.
+trovl is a command-line tool designed to simplify the management of symbolic links across different operating systems and configurations.
 
 ## Why trovl?
 
@@ -15,9 +15,9 @@ Tired of dealing with:
 
 ### And why not others?
 
-`trovl` is *symlink-first* and keeps the current filesystem as the source of truth for actions to take. Running `trovl` is primarily through explicit commands and manifest-driven sequences which allows for easy migrations and clear intentions.
+trovl is *symlink-first* and keeps the current filesystem as the source of truth for actions to take. Running trovl is primarily through explicit commands and manifest-driven sequences which allows for easy migrations and clear intentions.
 
-[GNU `stow`](https://www.gnu.org/software/stow/) is the most direct inspiration for `trovl` and its design principles.
+[GNU `stow`](https://www.gnu.org/software/stow/) is the most direct inspiration for trovl and its design principles. However, trovl currently takes direct paths for constructing links instead of relying on directory structure like `stow`.
 
 
 ## Key Features
@@ -57,9 +57,9 @@ trovl apply manifest.json
 ## Getting Started
 
 - [Installation](./install.md) - Install trovl on your system
-- [Quick Start](./quickstart.md) - Get up and running in minutes
+- [Quickstart](./quickstart.md) - Get up and running in minutes
+- [Configuration](./configuration.md) - Configure how trovl works and define defaults
 - [Commands](commands.md) - Complete command reference
-- [Examples](examples.md) - Real-world usage examples
 
 ## Project Links
 

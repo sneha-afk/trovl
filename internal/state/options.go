@@ -20,8 +20,10 @@ type TrovlOptions struct {
 	UseRelative  bool
 	OverwriteYes bool
 	OverwriteNo  bool
+	BackupDir    bool
 	BackupYes    bool
 	BackupNo     bool
+	ManifestPath string
 }
 
 type TrovlState struct {
