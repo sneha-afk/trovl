@@ -1,10 +1,10 @@
 ## trovl apply
 
-Applies a link list specified by schema. Defaults to $XDG_CONFIG_HOME/trovl/manifest.json (or ~/.config/trovl/manifest.json) if no manifest is specified.
+Applies a manifest specified by schema (default: $XDG_CONFIG_HOME/trovl/manifest.json)
 
 ### Synopsis
 
-Applies a link list specified by schema to bulk add links or fix as needed.
+Applies a manifest specified by schema to bulk add or fix links as needed.
 
 By default, trovl looks for a manifest in $XDG_CONFIG_HOME/trovl/manifest.json (typically ~/.config/trovl/manifest.json). If $XDG_CONFIG_HOME
 is not set, trovl then checks ~/.config/trovl/manifest.json (on all OSes). If any manifest is specified into the command, the default

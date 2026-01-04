@@ -23,7 +23,6 @@ type TrovlOptions struct {
 	BackupDir    bool
 	BackupYes    bool
 	BackupNo     bool
-	ManifestPath string
 }
 
 type TrovlState struct {

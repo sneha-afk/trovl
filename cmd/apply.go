@@ -14,8 +14,8 @@ var defaultFile = "manifest.json"
 // applyCmd represents the apply command
 var applyCmd = &cobra.Command{
 	Use:   "apply <manifest_file> [more_manifests]",
-	Short: "Applies a link list specified by schema. Defaults to $XDG_CONFIG_HOME/trovl/manifest.json (or ~/.config/trovl/manifest.json) if no manifest is specified.",
-	Long: `Applies a link list specified by schema to bulk add links or fix as needed.
+	Short: "Applies a manifest specified by schema (default: $XDG_CONFIG_HOME/trovl/manifest.json)",
+	Long: `Applies a manifest specified by schema to bulk add or fix links as needed.
 
 By default, trovl looks for a manifest in $XDG_CONFIG_HOME/trovl/manifest.json (typically ~/.config/trovl/manifest.json). If $XDG_CONFIG_HOME
 is not set, trovl then checks ~/.config/trovl/manifest.json (on all OSes). If any manifest is specified into the command, the default
