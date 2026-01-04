@@ -1,7 +1,7 @@
 title: trovl
-description: documentation for the trovl CLI
+description: Documentation for the trovl CLI
+url: https://sneha-afk.github.io/trovl/
 
-markdown: kramdown
 permalink: pretty
 
 plugins:
@@ -10,11 +10,26 @@ remote_theme: vaibhavvikas/jekyll-theme-minimalistic
 color-scheme: auto
 
 navigation:
-  - name: home
-    link: ./index.html
-  - name: installation
-    link: ./install.html
-  - name: quickstart
-    link: ./quickstart.html
-  - name: commands
-    link: ./commands.html
+  - name: Home
+    link: /
+  - name: Installation
+    link: /installation/
+  - name: Quickstart
+    link: /quickstart/
+  - name: Commands
+    link: /commands/
+    sublist:
+      - name: add
+        link: /cli/trovl_add/
+      - name: apply
+        link: /cli/trovl_apply/
+      - name: plan
+        link: /cli/trovl_plan/
+      - name: remove
+        link: /cli/trovl_remove/
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
