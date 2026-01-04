@@ -1,0 +1,6 @@
+title: trovl
+description: documentation for the trovl CLI
+remote-theme: just-the-docs
+
+markdown: kramdown
+permalink: pretty
