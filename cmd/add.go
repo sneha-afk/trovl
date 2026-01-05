@@ -13,8 +13,13 @@ var addCmd = &cobra.Command{
 	Short: "Adds a symlink that points to the target file",
 	Long: `When possible, add a true symlink (as in, not a junction or hard link) to a target file.
 
-When backing up a file that would be overwritten by this new symlink, trovl always uses $XDG_CACHE_HOME first, before
-falling back to OS defaults. See [trovl's use of environment variables](/trovl/configuration/#environment-variables) to learn more.
+- If a symlink already exists at the specified location, the user will be prompted on if they want to overwrite it with the new link.
+- If a directory already exists at the specified location for the symlink, an error will occur.
+- If a single, ordinary file already exists at the specified location for the symlink, the user will be prompted on if they want to backup the file.
+
+When backing up a file that would be overwritten by this new symlink, trovl always uses ` + "`$XDG_CACHE_HOME`" + ` first, before
+falling back to OS defaults. The backup directory is ` + "`$XDG_CACHE_HOME/trovl/backups`" + `.
+See [trovl's use of environment variables](/trovl/configuration/#environment-variables) to learn more.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		for i := 0; i < len(args); i += 2 {

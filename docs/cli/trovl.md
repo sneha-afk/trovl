@@ -21,8 +21,8 @@ and true-symlinking when possible.
 ### SEE ALSO
 
 * [trovl add](trovl_add.md)	 - Adds a symlink that points to the target file
-* [trovl apply](trovl_apply.md)	 - Applies a manifest specified by schema (default: $XDG_CONFIG_HOME/trovl/manifest.json)
-* [trovl generate](trovl_generate.md)	 - Generate a blank manifest file with the current schema (default: $XDG_CONFIG_HOME/trovl/manifest.json).
+* [trovl apply](trovl_apply.md)	 - Applies a manifest specified by schema (default: `$XDG_CONFIG_HOME/trovl/manifest.json`)
+* [trovl generate](trovl_generate.md)	 - Generate a blank manifest file with the current schema (default: `$XDG_CONFIG_HOME/trovl/manifest.json`).
 * [trovl plan](trovl_plan.md)	 - Describes what will happen during an `apply` without modifying the filesystem
 * [trovl remove](trovl_remove.md)	 - Removes a specified symlink while keeping the target file as-is.
 

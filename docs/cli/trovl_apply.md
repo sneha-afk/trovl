@@ -1,19 +1,20 @@
 ## trovl apply
 
-Applies a manifest specified by schema (default: $XDG_CONFIG_HOME/trovl/manifest.json)
+Applies a manifest specified by schema (default: `$XDG_CONFIG_HOME/trovl/manifest.json`)
 
 ### Synopsis
 
 Applies a manifest specified by schema to bulk add or fix links as needed.
 
-By default, trovl looks for a manifest in $XDG_CONFIG_HOME/trovl/manifest.json (typically ~/.config/trovl/manifest.json). If $XDG_CONFIG_HOME
-is not set, trovl then checks ~/.config/trovl/manifest.json (on all OSes). If any manifest is specified into the command, the default
-manifest file is not applied (i.e, this process happens only upon trovl apply)
+By default, trovl looks for a manifest in `$XDG_CONFIG_HOME/trovl/manifest.json` If `$XDG_CONFIG_HOME` is not set, trovl then checks `~/.config/trovl/manifest.json` on all systems. If any manifest is specified into the command, the default manifest file is not applied(i.e, this process happens when invoking `trovl apply` with no arguments).See [trovl's use of environment variables](/trovl/configuration/#environment-variables) to learn more on how these are determined.
 
-When backing up a file that would be overwritten by this new symlink, trovl always uses $XDG_CACHE_HOME first, before
-falling back to OS defaults. The backup directory is $XDG_CACHE_HOME/trovl/backups.
-See [trovl's use of environment variables](/trovl/configuration/#environment-variables) to learn more.
+Similar to the add command:
+- If a symlink already exists at the specified location, the user will be prompted on if they want to overwrite it with the new link.
+- If a directory already exists at the specified location for the symlink, an error will occur.
+- If a single, ordinary file already exists at the specified location for the symlink, the user will be prompted on if they want to backup the file.
 
+When backing up a file that would be overwritten by this new symlink, trovl always uses `$XDG_CACHE_HOME` first, before
+falling back to OS defaults. The backup directory is `$XDG_CACHE_HOME/trovl/backups`.
 
 ```
 trovl apply <manifest_file> [more_manifests] [flags]

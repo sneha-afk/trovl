@@ -12,7 +12,7 @@ var removeCmd = &cobra.Command{
 	Use:   "remove <symlink> [more_symlinks]",
 	Short: "Removes a specified symlink while keeping the target file as-is.",
 	Long: `Removes symlinks while keeping the target file untouched. Validates any argument passed
-	in as truly being a symlink to prevent data loss.`,
+in as truly being a symlink to prevent data loss.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, symlink := range args {
 			if err := links.RemoveByPath(State, symlink); err != nil {

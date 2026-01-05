@@ -1,11 +1,10 @@
 ## trovl generate
 
-Generate a blank manifest file with the current schema (default: $XDG_CONFIG_HOME/trovl/manifest.json).
+Generate a blank manifest file with the current schema (default: `$XDG_CONFIG_HOME/trovl/manifest.json`).
 
 ### Synopsis
 
-Generate a blank manifest file with trovl's current schema. By default, this will be generated at the default location of
-$XDG_CONFIG_HOME/trovl/manifest.json (see [environment variable usage](../configuration/#environment-variables))
+Generate a blank manifest file with trovl's current schema. By default, this will be generated at the default location of `$XDG_CONFIG_HOME/trovl/manifest.json` (see [environment variable usage](/trovl/configuration/#environment-variables))
 
 ```
 trovl generate [optional path(s)] [flags]

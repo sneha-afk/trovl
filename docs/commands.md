@@ -24,6 +24,7 @@ These flags can be used with any command:
 |--------------|-------------------|
 | `add`        | [cli/add](./cli/trovl_add.md) |
 | `apply`      | [cli/apply](./cli/trovl_apply.md) |
+| `generate`   | [cli/generate](./cli/trovl_generate.md) |
 | `plan`       | [cli/plan](./cli/trovl_plan.md) |
 | `remove`     | [cli/remove](./cli/trovl_remove.md) |
 | `completion` | `trovl completion --help` |
@@ -81,15 +82,4 @@ trovl help
 trovl help add
 trovl help apply
 ```
-
----
-
-## Platform Support
-
-trovl supports the following platforms for `platforms` field in manifests:
-
-- `linux` - Linux systems
-- `darwin` - macOS systems
-- `windows` - Windows systems
-- `all` - All platforms
 

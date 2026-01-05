@@ -538,7 +538,7 @@ func TestApply(t *testing.T) {
 					t.Errorf("could not setup backup directory: %v", err)
 					return
 				}
-				backupDir = filepath.Join(backupDir, "trovl", "backups")
+				backupDir = filepath.Join(backupDir, "backups")
 				if err := os.MkdirAll(backupDir, 0755); err != nil {
 					t.Errorf("could not create backup parent directory: %v", err)
 					return

@@ -53,9 +53,9 @@ func generate(path string) {
 // generateCmd represents the generate command
 var generateCmd = &cobra.Command{
 	Use:   "generate [optional path(s)]",
-	Short: "Generate a blank manifest file with the current schema (default: $XDG_CONFIG_HOME/trovl/manifest.json).",
-	Long: `Generate a blank manifest file with trovl's current schema. By default, this will be generated at the default location of
-$XDG_CONFIG_HOME/trovl/manifest.json (see [environment variable usage](../configuration/#environment-variables))`,
+	Short: "Generate a blank manifest file with the current schema (default: `$XDG_CONFIG_HOME/trovl/manifest.json`).",
+	Long: `Generate a blank manifest file with trovl's current schema. By default, this will be generated at the default location of ` +
+		"`$XDG_CONFIG_HOME/trovl/manifest.json` (see [environment variable usage](/trovl/configuration/#environment-variables))",
 	Run: func(cmd *cobra.Command, args []string) {
 		var path string
 		if 0 < len(args) {

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://github.com/sneha-afk/trovl/raw/main/docs/trovl_schema.json",
+  "links": [
+    {
+      "target": "~/dotfiles/dot-home/.vimrc",
+      "link": "~/.vimrc",
+      "platform_overrides": {
+        "windows": {
+          "link": "~/_vimrc"
+        }
+      }
+    },
+    {
+      "target": "./.config/trovl",
+      "link": "~/.trovl_dir",
+      "relative": true
+    }
+  ]
+}
