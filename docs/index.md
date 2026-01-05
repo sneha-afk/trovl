@@ -58,7 +58,7 @@ trovl apply manifest.json
 
 - [Installation](./install.md) - Install trovl on your system
 - [Quickstart](./quickstart.md) - Get up and running in minutes
-- [Configuration](./configuration.md) - Configure how trovl works and define defaults
+- [Configuration](./configuration.md) - Configure how trovl works and learn how to write a manifest file
 - [Commands](commands.md) - Complete command reference
 
 ## Project Links

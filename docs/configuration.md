@@ -8,10 +8,12 @@ layout: default
 
 trovl respects the following environment variables:
 
-- `XDG_CACHE_HOME` - Cache directory for backups: trovl will always respect what is set for `$XDG_CACHE_HOME` first before following back to [Go's defaults](https://pkg.go.dev/os#UserCacheDir):
+- `XDG_CACHE_HOME` - Cache directory: trovl will always respect what is set for `$XDG_CACHE_HOME` first before following back to [Go's defaults](https://pkg.go.dev/os#UserCacheDir):
     - Unix: `$HOME/.cache`
     - Darwin (macOS): `$HOME/Library/Caches`
     - Windows: `%LocalAppData%`
+
+    trovl uses `$XDG_CACHE_HOME/trovl/backups` to store any backed up files.
 - `XDG_CONFIG_HOME` - Config directory will be located at `$XDG_CONFIG_HOME/trovl`
     - On all systems, the value set for `$XDG_CONFIG_HOME` is scouted first before falling back to `~/.config`
 

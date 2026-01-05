@@ -60,8 +60,6 @@ trovl completion fish > ~/.config/fish/completions/trovl.fish
 trovl completion powershell | Out-String | Invoke-Expression
 ```
 
-See [detailed documentation](cli/trovl_completion.md).
-
 ---
 
 ### help
@@ -81,5 +79,10 @@ trovl help
 # Help for specific command
 trovl help add
 trovl help apply
+```
+
+This can also be used as:
+```bash
+trovl [command] --help
 ```
 

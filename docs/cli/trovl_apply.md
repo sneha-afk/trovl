@@ -6,7 +6,8 @@ Applies a manifest specified by schema (default: `$XDG_CONFIG_HOME/trovl/manifes
 
 Applies a manifest specified by schema to bulk add or fix links as needed.
 
-By default, trovl looks for a manifest in `$XDG_CONFIG_HOME/trovl/manifest.json` If `$XDG_CONFIG_HOME` is not set, trovl then checks `~/.config/trovl/manifest.json` on all systems. If any manifest is specified into the command, the default manifest file is not applied(i.e, this process happens when invoking `trovl apply` with no arguments).See [trovl's use of environment variables](/trovl/configuration/#environment-variables) to learn more on how these are determined.
+By default, trovl looks for a manifest in `$XDG_CONFIG_HOME/trovl/manifest.json` If `$XDG_CONFIG_HOME` is not set, trovl then checks `~/.config/trovl/manifest.json` on all systems. If any manifest is specified into the command, the default manifest file is not applied(i.e, this process happens when invoking `trovl apply` with no arguments).
+See [trovl's use of environment variables](/trovl/configuration/#environment-variables) to learn more on how these are determined.
 
 Similar to the add command:
 - If a symlink already exists at the specified location, the user will be prompted on if they want to overwrite it with the new link.

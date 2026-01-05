@@ -65,7 +65,7 @@ Create a file named `manifest.json` (note: the name *does not matter*):
 }
 ```
 
-> Note: trovl never creates dangling links, so if these two targes do not exist, you will probably get an error.
+> Note: trovl never creates dangling links, so if these two targets do not exist, you will probably get an error.
 
 ### Step 2: Preview the changes
 
@@ -120,11 +120,6 @@ Create a manifest that works across different operating systems:
 }
 ```
 
-When you run `trovl apply manifest.json`, it will:
-- Create the appropriate symlinks for your current platform
-- Skip symlinks that don't apply to your OS
-- Use overrides when specified
-
 ## Common Options
 
 ### Dry run
@@ -145,5 +140,5 @@ trovl apply manifest.json --verbose
 
 ## Next Steps
 
-- Explore the [Commands](commands.md) reference for all available options
-- Learn about manifest schema details in the CLI documentation
+- Learn more about [configuring](configuration.md) trovl's behavior and more about manifests
+- Explore the [commands](commands.md) supported by trovl along with their options
