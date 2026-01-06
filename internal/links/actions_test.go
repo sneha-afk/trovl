@@ -17,11 +17,13 @@ func TestMain(m *testing.M) {
 // Calls Construct and Add to simulate full work through of the add subcommand.
 func TestAdd(t *testing.T) {
 	tests := []struct {
-		name     string
-		wantErr  bool
-		options  *state.TrovlOptions
-		setup    func(tmp, targetPath, linkPath string)
-		validate func(t *testing.T, tmp, targetPath, linkPath string)
+		name       string
+		wantErr    bool
+		options    *state.TrovlOptions
+		targetPath string
+		linkPath   string
+		setup      func(tmp, targetPath, linkPath string)
+		validate   func(t *testing.T, tmp, targetPath, linkPath string)
 	}{
 		{
 			name:    "error: target does not exist",
@@ -118,6 +120,28 @@ func TestAdd(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:     "success: resolves environment variables",
+			linkPath: "$XDG_CACHE_HOME/link",
+			setup: func(tmp, targetPath, linkPath string) {
+				_ = os.WriteFile(targetPath, []byte("target"), 0644)
+			},
+			validate: func(t *testing.T, tmp, targetPath, linkPath string) {
+				// this called within add
+				linkPath, err := utils.CleanLink(linkPath, false)
+				if err != nil {
+					t.Errorf("couldn't do setup: %v", err)
+				}
+
+				info, err := os.Lstat(linkPath)
+				if err != nil {
+					t.Fatalf("expected symlink to exist: %v", err)
+				}
+				if info.Mode()&os.ModeSymlink == 0 {
+					t.Fatalf("expected symlink, got %v", info.Mode())
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -126,11 +150,16 @@ func TestAdd(t *testing.T) {
 			t.Setenv("XDG_CONFIG_HOME", tmp)
 			t.Setenv("XDG_CACHE_HOME", tmp)
 
-			targetPath := filepath.Join(tmp, "target.txt")
-			linkPath := filepath.Join(tmp, "link.txt")
+			if tt.targetPath == "" {
+				tt.targetPath = filepath.Join(tmp, "target.txt")
+			}
+
+			if tt.linkPath == "" {
+				tt.linkPath = filepath.Join(tmp, "link.txt")
+			}
 
 			if tt.setup != nil {
-				tt.setup(tmp, targetPath, linkPath)
+				tt.setup(tmp, tt.targetPath, tt.linkPath)
 			}
 
 			st := state.DefaultState()
@@ -138,18 +167,18 @@ func TestAdd(t *testing.T) {
 				st.Options = tt.options
 			}
 
-			_, err := links.Construct(st, targetPath, linkPath)
+			_, err := links.Construct(st, tt.targetPath, tt.linkPath)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("Construct: wantErr=%v, got %v", tt.wantErr, err)
 			}
 
-			err = links.Add(st, targetPath, linkPath)
+			err = links.Add(st, tt.targetPath, tt.linkPath)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("Add: wantErr=%v, got %v", tt.wantErr, err)
 			}
 
 			if tt.validate != nil {
-				tt.validate(t, tmp, targetPath, linkPath)
+				tt.validate(t, tmp, tt.targetPath, tt.linkPath)
 			}
 		})
 	}

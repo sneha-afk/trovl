@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 	"time"
@@ -18,6 +19,30 @@ type PathInfo struct {
 }
 
 var FileTimeFormat = "2006-01-02_15-04-05"
+
+// CleanLink defaults to using an absolute filepath, only relative if specified
+// Guaranteed that filepath.Clean has been called before returning
+func CleanLink(raw string, useRelative bool) (string, error) {
+	var ret string
+	var err error = nil
+
+	// Handle issues with not dealing with "~" correctly
+	if len(raw) > 0 && raw[0] == '~' {
+		usr, err := user.Current()
+		if err != nil {
+			return "", err
+		}
+		raw = filepath.Join(usr.HomeDir, raw[1:])
+	}
+	raw = os.ExpandEnv(raw)
+
+	if useRelative {
+		ret = filepath.Clean(raw)
+	} else {
+		ret, err = filepath.Abs(raw)
+	}
+	return ret, err
+}
 
 func GetPathInfo(path string) (PathInfo, error) {
 	info, err := os.Lstat(path)
