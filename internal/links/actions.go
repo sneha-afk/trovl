@@ -153,11 +153,11 @@ func Construct(s *state.TrovlState, targetPath, symlinkPath string) (Link, error
 // Add a symlink specified by the Link class.
 // Precondition: there is no existing file where the symlink was specified
 func Add(s *state.TrovlState, targetPath, symlinkPath string) error {
-	targetPath, err := utils.CleanLink(targetPath, s.Options.UseRelative)
+	targetPath, err := utils.CleanPath(targetPath, s.Options.UseRelative)
 	if err != nil {
 		return fmt.Errorf("invalid path (target): %v", err)
 	}
-	symlinkPath, err = utils.CleanLink(symlinkPath, s.Options.UseRelative)
+	symlinkPath, err = utils.CleanPath(symlinkPath, s.Options.UseRelative)
 	if err != nil {
 		return fmt.Errorf("invalid path (symlink): %v", err)
 	}
@@ -181,7 +181,7 @@ func Add(s *state.TrovlState, targetPath, symlinkPath string) error {
 // RemoveByPath takes in the path to a symlink to remove, while keeping the original
 // file intact (note: target file is not checked for existence as the symlink is being removed.)
 func RemoveByPath(s *state.TrovlState, path string) error {
-	path, err := utils.CleanLink(path, true)
+	path, err := utils.CleanPath(path, true)
 	if err != nil {
 		return fmt.Errorf("invalid path (symlink): %v", err)
 	}

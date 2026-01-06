@@ -138,7 +138,7 @@ func (m *Manifest) Apply(state *state.TrovlState) error {
 			if slices.Contains(link.Platforms, "all") || slices.Contains(link.Platforms, runtime.GOOS) {
 				linkToUse = link.Link
 			} else {
-				state.Logger.Warn(fmt.Sprintf("links[%d]: link does not apply to current platform, skipping", i), "linkNum", i, "target", link.Target)
+				state.Logger.Warn(fmt.Sprintf("links[%d]: link does not apply to current platform, skipping", i), "linkIndex", i, "target", link.Target)
 				continue
 			}
 		}
@@ -153,7 +153,7 @@ func (m *Manifest) Apply(state *state.TrovlState) error {
 		}
 
 		if !state.Options.DryRun {
-			state.Logger.Info(fmt.Sprintf("Successfully added symlink [%v/%v]", i, numLinks), "link", linkToUse, "target", link.Target)
+			state.Logger.Info(fmt.Sprintf("Successfully added symlink [%v/%v]", i+1, numLinks), "link", linkToUse, "target", link.Target)
 		}
 	}
 

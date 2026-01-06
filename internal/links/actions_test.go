@@ -128,7 +128,7 @@ func TestAdd(t *testing.T) {
 			},
 			validate: func(t *testing.T, tmp, targetPath, linkPath string) {
 				// this called within add
-				linkPath, err := utils.CleanLink(linkPath, false)
+				linkPath, err := utils.CleanPath(linkPath, false)
 				if err != nil {
 					t.Errorf("couldn't do setup: %v", err)
 				}

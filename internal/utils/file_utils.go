@@ -5,8 +5,9 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"os/user"
 	"path/filepath"
+	"regexp"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -18,28 +19,60 @@ type PathInfo struct {
 	TargetPath string // If this is a symlink, what is is pointing to?
 }
 
+// GOOS defined locally for easy testing
+var GOOS = runtime.GOOS
+
 var FileTimeFormat = "2006-01-02_15-04-05"
 
-// CleanLink defaults to using an absolute filepath, only relative if specified
-// Guaranteed that filepath.Clean has been called before returning
-func CleanLink(raw string, useRelative bool) (string, error) {
-	var ret string
-	var err error = nil
+var (
+	winPercentEnv = regexp.MustCompile(`%([A-Za-z_][A-Za-z0-9_]*)%`)
+	winPSEnv      = regexp.MustCompile(`\$(?i:env):([A-Za-z_][A-Za-z0-9_]*)`)
+	winPSBraceEnv = regexp.MustCompile(`\$\{(?i:env):([A-Za-z_][A-Za-z0-9_]*)\}`)
+)
 
-	// Handle issues with not dealing with "~" correctly
-	if len(raw) > 0 && raw[0] == '~' {
-		usr, err := user.Current()
+func NormalizeWindowsEnvVars(s string) string {
+	if GOOS != "windows" {
+		return s
+	}
+
+	// %FOO% → ${FOO}
+	s = winPercentEnv.ReplaceAllString(s, `${$1}`)
+
+	// ${env:FOO} → ${FOO}
+	s = winPSBraceEnv.ReplaceAllString(s, `${$1}`)
+
+	// $env:FOO → ${FOO}
+	s = winPSEnv.ReplaceAllString(s, `${$1}`)
+
+	return s
+}
+
+// CleanPath defaults to using an absolute filepath, only relative if specified
+// Guaranteed that filepath.Clean has been called before returning
+func CleanPath(raw string, useRelative bool) (string, error) {
+	var ret string
+	var err error
+
+	// 1. Normalize Windows shell env syntax to ${}
+	normalized := NormalizeWindowsEnvVars(raw)
+
+	// 2. Expand env vars
+	ret = os.ExpandEnv(normalized)
+
+	// 3. Handle issues with not dealing with "~" correctly
+	if strings.HasPrefix(ret, "~") {
+		home, err := os.UserHomeDir()
 		if err != nil {
 			return "", err
 		}
-		raw = filepath.Join(usr.HomeDir, raw[1:])
+		ret = filepath.Join(home, ret[1:])
 	}
-	raw = os.ExpandEnv(raw)
 
+	// 4. Normalize again: Abs will resolve to absolute then call Clean()
 	if useRelative {
-		ret = filepath.Clean(raw)
+		ret = filepath.Clean(ret)
 	} else {
-		ret, err = filepath.Abs(raw)
+		ret, err = filepath.Abs(ret)
 	}
 	return ret, err
 }
