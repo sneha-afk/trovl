@@ -25,56 +25,74 @@ var GOOS = runtime.GOOS
 var FileTimeFormat = "2006-01-02_15-04-05"
 
 var (
-	winPercentEnv = regexp.MustCompile(`%([A-Za-z_][A-Za-z0-9_]*)%`)
-	winPSEnv      = regexp.MustCompile(`\$(?i:env):([A-Za-z_][A-Za-z0-9_]*)`)
-	winPSBraceEnv = regexp.MustCompile(`\$\{(?i:env):([A-Za-z_][A-Za-z0-9_]*)\}`)
+	// Group 1: %VAR% content | Group 2: ${env:VAR} content | Group 3: $env:VAR content
+	winEnvRegex = regexp.MustCompile(`(?i)%([A-Z_]\w*)%|\$\{(?:env):([A-Z_]\w*)\}|\$(?:env):([A-Z_]\w*)`)
 )
 
+// NormalizeWindowsEnvVars converts various Windows env var syntaxes to ${VAR} format.
 func NormalizeWindowsEnvVars(s string) string {
-	if GOOS != "windows" {
+	if GOOS != "windows" || s == "" {
 		return s
 	}
 
-	// %FOO% → ${FOO}
-	s = winPercentEnv.ReplaceAllString(s, `${$1}`)
-
-	// ${env:FOO} → ${FOO}
-	s = winPSBraceEnv.ReplaceAllString(s, `${$1}`)
-
-	// $env:FOO → ${FOO}
-	s = winPSEnv.ReplaceAllString(s, `${$1}`)
-
-	return s
+	return winEnvRegex.ReplaceAllStringFunc(s, func(match string) string {
+		// get the var names inside
+		submatches := winEnvRegex.FindStringSubmatch(match)
+		for i := 1; i < len(submatches); i++ {
+			if submatches[i] != "" {
+				return "${" + submatches[i] + "}"
+			}
+		}
+		return match
+	})
 }
 
 // CleanPath defaults to using an absolute filepath, only relative if specified
 // Guaranteed that filepath.Clean has been called before returning
 func CleanPath(raw string, useRelative bool) (string, error) {
-	var ret string
-	var err error
+	if raw == "" {
+		if useRelative {
+			return ".", nil
+		}
+		return filepath.Abs(".")
+	}
 
 	// 1. Normalize Windows shell env syntax to ${}
 	normalized := NormalizeWindowsEnvVars(raw)
 
 	// 2. Expand env vars
-	ret = os.ExpandEnv(normalized)
+	ret := os.ExpandEnv(normalized)
 
-	// 3. Handle issues with not dealing with "~" correctly
+	// 3. Handle tilde expansion
 	if strings.HasPrefix(ret, "~") {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return "", err
 		}
-		ret = filepath.Join(home, ret[1:])
+		if ret == "~" {
+			ret = home
+		} else if ret[1] == '/' || ret[1] == '\\' {
+			ret = filepath.Join(home, ret[2:])
+		}
 	}
 
-	// 4. Normalize again: Abs will resolve to absolute then call Clean()
-	if useRelative {
-		ret = filepath.Clean(ret)
-	} else {
-		ret, err = filepath.Abs(ret)
+	// 4. Handle empty string special case
+	if ret == "" {
+		if useRelative {
+			return ".", nil
+		}
+		return filepath.Abs(".")
 	}
-	return ret, err
+
+	// 5. Make absolute or keep relative as requested (Abs also cleans)
+	if useRelative {
+		return filepath.Clean(ret), nil
+	}
+	absPath, err := filepath.Abs(ret)
+	if err != nil {
+		return "", err
+	}
+	return absPath, nil
 }
 
 func GetPathInfo(path string) (PathInfo, error) {
