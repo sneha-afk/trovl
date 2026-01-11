@@ -4,38 +4,20 @@ layout: default
 
 # trovl
 
-trovl is a command-line tool designed to simplify the management of symbolic links across different operating systems and configurations.
+trovl is a cross-platform CLI for managing symbolic links in a predictable, declarative way.
 
-## Why trovl?
+## What it does
 
-Tired of dealing with:
-- Different symlink syntax across Windows, Linux, and macOS?
-- Platform-specific symlink locations or names (like `~/.vimrc` vs `~/_vimrc`)?
-- Manually managing dozens of symlinks for various programs and configurations?
+- Creates and manages symlinks across Linux, macOS, Windows, and WSL
+- Uses a JSON manifest to define links in one place
+- Supports platform-specific paths and overrides
+- Provides dry-run and backup options for safer changes
 
-### And why not others?
+trovl is *symlink-first*: the existing filesystem is treated as the source of truth, and actions are taken explicitly via commands or manifests.
 
-trovl is *symlink-first* and keeps the current filesystem as the source of truth for actions to take. Running trovl is primarily through explicit commands and manifest-driven sequences which allows for easy migrations and clear intentions.
+It’s inspired by [GNU stow](https://www.gnu.org/software/stow/), but currently uses direct paths instead of directory structure to define links.
 
-[GNU `stow`](https://www.gnu.org/software/stow/) is the most direct inspiration for trovl and its design principles. However, trovl currently takes direct paths for constructing links instead of relying on directory structure like `stow`.
-
-
-## Key Features
-
-- **Cross-platform support**: Works seamlessly on Linux, macOS, and Windows on both amd64 and arm64 architectures
-- **Manifest-based configuration**: Define all your symlinks in a single JSON file
-- **Platform-specific overrides**: Different symlink locations per operating system
-- **Safe operations**: Built-in backup and dry-run modes
-- **True symlinking**: Uses native symlink functionality when available
-
-## Use Cases
-
-- **Dotfile management**: Keep your configuration files synchronized across machines
-- **Development environments**: Link project files to standard locations
-- **System configuration**: Manage system-wide symlinks declaratively
-- **Cross-platform workflows**: Maintain the same setup on different operating systems
-
-## Quick Example
+## Example
 
 ```json
 {
@@ -48,7 +30,7 @@ trovl is *symlink-first* and keeps the current filesystem as the source of truth
     }
   ]
 }
-```
+````
 
 ```bash
 trovl apply manifest.json
@@ -56,13 +38,14 @@ trovl apply manifest.json
 
 ## Getting Started
 
-- [Installation](./install.md) - Install trovl on your system
-- [Quickstart](./quickstart.md) - Get up and running in minutes
-- [Configuration](./configuration.md) - Configure how trovl works and learn how to write a manifest file
-- [Commands](commands.md) - Complete command reference
+* [Installation](./install.md)
+* [Quickstart](./quickstart.md)
+* [Configuration](./configuration.md)
+* [Commands](./commands.md)
 
-## Project Links
+## Links
 
-- [GitHub Repository](https://github.com/sneha-afk/trovl)
-- [Issue Tracker](https://github.com/sneha-afk/trovl/issues)
-- [Releases](https://github.com/sneha-afk/trovl/releases)
+* [GitHub](https://github.com/sneha-afk/trovl)
+* [Issues](https://github.com/sneha-afk/trovl/issues)
+* [Releases](https://github.com/sneha-afk/trovl/releases)
+

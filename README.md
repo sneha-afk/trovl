@@ -2,6 +2,16 @@
 
 A simple, cross-platform symlink manager that eliminates the pain of managing symlinks across different operating systems.
 
+## Supported platforms
+
+
+| OS | Architectures |
+|----|---------------|
+| Linux (including WSL) | amd64, arm64 |
+| macOS | amd64 (Intel), arm64 (Apple Silicon) |
+| Windows | amd64, arm64 |
+
+
 ## Installation
 
 See [INSTALL.md](./docs/install.md) for detailed installation instructions including pre-built binaries.

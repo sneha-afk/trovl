@@ -17,7 +17,7 @@ This downloads the source, builds `trovl`, and installs it to `$GOBIN` (defaults
 **Verify installation:**
 
 ```bash
-trovl version
+trovl --version
 ```
 
 ---
@@ -28,7 +28,7 @@ Pre-built binaries are available for **Linux** (amd64, arm64), **macOS** (Intel 
 
 | OS | Architectures |
 |----|---------------|
-| Linux | amd64, arm64 |
+| Linux (including WSL) | amd64, arm64 |
 | macOS | amd64 (Intel), arm64 (Apple Silicon) |
 | Windows | amd64, arm64 |
 

@@ -60,13 +60,18 @@ var generateCmd = &cobra.Command{
 		var path string
 		if 0 < len(args) {
 			for _, arg := range args {
-				path = filepath.Clean(arg)
+				path, err := utils.CleanPath(arg, true)
+				if err != nil {
+					State.Logger.Error("Could not clean up argument path", "error", err)
+					os.Exit(1)
+				}
 				generate(path)
 			}
 		} else {
 			configDir, err := utils.GetConfigDir()
 			if err != nil {
 				State.Logger.Error("Could not read config directory", "error", err)
+				os.Exit(1)
 			}
 			path = filepath.Join(configDir, defaultFile)
 			generate(path)
@@ -74,8 +79,7 @@ var generateCmd = &cobra.Command{
 	},
 	Aliases: []string{"gen"},
 	Example: `trovl generate     # Default location
-trovl generate here.json
-`,
+trovl generate here.json`,
 }
 
 func init() {

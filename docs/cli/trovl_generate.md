@@ -15,7 +15,6 @@ trovl generate [optional path(s)] [flags]
 ```
 trovl generate     # Default location
 trovl generate here.json
-
 ```
 
 ### Options
