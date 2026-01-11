@@ -175,6 +175,9 @@ func Add(s *state.TrovlState, targetPath, symlinkPath string) error {
 	if s.Options.DryRun {
 		return nil
 	}
+	if err := os.MkdirAll(filepath.Dir(link.LinkMount), 0755); err != nil {
+		return fmt.Errorf("failed to create parent directories: %w", err)
+	}
 	return os.Symlink(link.Target, link.LinkMount)
 }
 
