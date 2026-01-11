@@ -3,6 +3,7 @@ package utils_test
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/sneha-afk/trovl/internal/utils"
@@ -126,6 +127,10 @@ func TestCleanPath_AllCases(t *testing.T) {
 
 	// Set some env vars for testing
 	t.Setenv("A", "foo")
+	if runtime.GOOS != "windows" {
+		// other platforms are case sensitive
+		t.Setenv("a", "foo")
+	}
 	t.Setenv("B", "bar")
 	t.Setenv("C", "baz")
 	t.Setenv("TRAVERASL", "../../")
@@ -141,7 +146,7 @@ func TestCleanPath_AllCases(t *testing.T) {
 		{
 			name:         "cmd percent vars",
 			in:           `%A%\%B%`,
-			want:         filepath.Join("foo", "bar"),
+			want:         "foo\\bar",
 			useRelative:  true,
 			overrideGOOS: "windows",
 		},
@@ -156,12 +161,12 @@ func TestCleanPath_AllCases(t *testing.T) {
 			name:         "powershell env",
 			in:           `$env:A\$env:B`,
 			useRelative:  true,
-			want:         filepath.Join("foo", "bar"),
+			want:         "foo\\bar",
 			overrideGOOS: "windows",
 		},
 		{
 			name:         "powershell case insensitivity",
-			in:           "${ENV:a}",
+			in:           "${ENV:a}/",
 			want:         "foo",
 			useRelative:  true,
 			overrideGOOS: "windows",
@@ -170,14 +175,14 @@ func TestCleanPath_AllCases(t *testing.T) {
 			name:         "brace powershell env",
 			in:           `${env:A}\${env:B}`,
 			useRelative:  true,
-			want:         filepath.Join("foo", "bar"),
+			want:         "foo\\bar",
 			overrideGOOS: "windows",
 		},
 		{
 			name:         "mixed syntax",
 			in:           `%A%\$env:B\${env:C}`,
 			useRelative:  true,
-			want:         filepath.Join("foo", "bar", "baz"),
+			want:         "foo\\bar\\baz",
 			overrideGOOS: "windows",
 		},
 		{

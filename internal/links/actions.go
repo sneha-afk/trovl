@@ -73,9 +73,9 @@ func Construct(s *state.TrovlState, targetPath, symlinkPath string) (Link, error
 				shouldOverwrite = false
 			} else {
 				if symlinkInfo.TargetPath == targetPath {
-					s.Logger.Warn(fmt.Sprintf("Symlink %v already exists and already points to %v, should it be overwritten? [y/N]", targetPath, symlinkPath))
+					s.Logger.Warn(fmt.Sprintf("Symlink %v already exists and already points to %v, should it be overwritten? [y/N]", symlinkPath, targetPath))
 				} else {
-					s.Logger.Warn(fmt.Sprintf("Symlink %v already exists but points to another target (%v), should it be overwritten? [y/N]", symlinkInfo.TargetPath, symlinkPath))
+					s.Logger.Warn(fmt.Sprintf("Symlink %v already exists but points to another target (%v), should it be overwritten? [y/N]", symlinkPath, symlinkInfo.TargetPath))
 				}
 				fmt.Printf("> ")
 				var input = 'n'
