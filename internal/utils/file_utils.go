@@ -48,6 +48,13 @@ func NormalizeWindowsEnvVars(s string) string {
 	})
 }
 
+func getPowerShellCommand() string {
+	if _, err := exec.LookPath("pwsh"); err == nil {
+		return "pwsh"
+	}
+	return "powershell"
+}
+
 // ExpandPowerShellVars expands PowerShell-specific variables on Windows
 func ExpandPowerShellVars(s string) (string, error) {
 	if GOOS != "windows" || !strings.Contains(s, "$") {
@@ -55,23 +62,34 @@ func ExpandPowerShellVars(s string) (string, error) {
 	}
 
 	knownPSVars := []string{"PROFILE", "PSHOME", "PSScriptRoot", "PSCommandPath"}
-
-	result := s
+	varsNeeded := []string{}
 	for _, varName := range knownPSVars {
-		pattern := "$" + varName
-		if !strings.Contains(result, pattern) {
-			continue
+		if strings.Contains(s, "$"+varName) {
+			varsNeeded = append(varsNeeded, varName)
 		}
+	}
 
-		// run powershell to get value
-		cmd := exec.Command("powershell", "-NoProfile", "-Command", fmt.Sprintf("$%s", varName))
-		output, err := cmd.Output()
-		if err != nil {
-			continue
+	if len(varsNeeded) == 0 {
+		return s, nil
+	}
+
+	// run ps to get the values of these
+	psCmd := strings.Join(varsNeeded, "','")
+	psCommand := fmt.Sprintf("@('%s') | ForEach-Object { \"$_=$((Get-Variable $_).Value)\" }", psCmd)
+
+	cmd := exec.Command(getPowerShellCommand(), "-NoLogo", "-Command", psCommand)
+	output, err := cmd.Output()
+	if err != nil {
+		return s, err
+	}
+
+	// parse "VAR=value" lines and replace in string
+	result := s
+	for line := range strings.SplitSeq(strings.TrimSpace(string(output)), "\n") {
+		parts := strings.SplitN(strings.TrimSpace(line), "=", 2)
+		if len(parts) == 2 {
+			result = strings.ReplaceAll(result, "$"+parts[0], parts[1])
 		}
-
-		value := strings.TrimSpace(string(output))
-		result = strings.ReplaceAll(result, pattern, value)
 	}
 
 	return result, nil
