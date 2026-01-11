@@ -34,7 +34,14 @@ type Manifest struct {
 	Links []ManifestLink `json:"links"`
 }
 
-var allSupportedPlatforms mapset.Set[string] = mapset.NewSet("windows", "linux", "darwin")
+var allSupportedPlatforms mapset.Set[string] = mapset.NewSet("windows", "linux", "darwin", "wsl")
+
+func isWSL() bool {
+	if os.Getenv("WSL_INTEROP") != "" || os.Getenv("WSL_DISTRO_NAME") != "" {
+		return true
+	}
+	return false
+}
 
 func IsSupportedPlatform(platform string) bool {
 	platform = strings.ToLower(platform)
@@ -126,6 +133,7 @@ func (m *Manifest) UnmarshalJSON(data []byte) error {
 func (m *Manifest) Apply(state *state.TrovlState) error {
 	var linkToUse string
 	var numLinks = len(m.Links)
+	var isWSL = isWSL()
 
 	for i := range m.Links {
 		link := &m.Links[i]
@@ -135,7 +143,7 @@ func (m *Manifest) Apply(state *state.TrovlState) error {
 			linkToUse = override.Link
 		} else {
 			// 2. Determine whether this link applies to the current platform
-			if slices.Contains(link.Platforms, "all") || slices.Contains(link.Platforms, runtime.GOOS) {
+			if slices.Contains(link.Platforms, "all") || slices.Contains(link.Platforms, runtime.GOOS) || (isWSL && slices.Contains(link.Platforms, "wsl")) {
 				linkToUse = link.Link
 			} else {
 				state.Logger.Warn(fmt.Sprintf("links[%d]: link does not apply to current platform, skipping", i), "linkIndex", i, "target", link.Target)

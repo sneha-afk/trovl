@@ -1,108 +1,108 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://github.com/sneha-afk/trovl/docs/trovl.schema.json",
-    "type": "object",
-    "required": ["links"],
-    "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sneha-afk/trovl/docs/trovl.schema.json",
+  "type": "object",
+  "required": ["links"],
+  "additionalProperties": false,
 
-    "properties": {
-        "$schema": {
-            "type": "string"
-        },
-
-        "links": {
-            "type": "array",
-            "minItems": 1,
-            "items": { "$ref": "#/$defs/link" },
-            "description": "List of managed symlinks.",
-            "uniqueItems": true
-        }
+  "properties": {
+    "$schema": {
+      "type": "string"
     },
 
-    "$defs": {
-        "platform": {
-            "type": "string",
-            "enum": ["windows", "linux", "darwin", "all"]
+    "links": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/link" },
+      "description": "List of managed symlinks.",
+      "uniqueItems": true
+    }
+  },
+
+  "$defs": {
+    "platform": {
+      "type": "string",
+      "enum": ["windows", "linux", "darwin", "wsl", "all"]
+    },
+
+    "link": {
+      "type": "object",
+      "required": ["target", "link"],
+      "additionalProperties": false,
+
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional stable identifier for this link, ideally unique to others."
+        },
+
+        "description": {
+          "type": "string",
+          "description": "Optional description of this link.",
+          "minLength": 1
+        },
+
+        "platforms": {
+          "type": "array",
+          "description": "Platforms on which the base link path applies.",
+          "items": { "$ref": "#/$defs/platform" },
+          "minItems": 1,
+          "uniqueItems": true,
+          "default": ["all"]
+        },
+
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path to the source file or directory to be linked."
         },
 
         "link": {
-            "type": "object",
-            "required": ["target", "link"],
-            "additionalProperties": false,
-
-            "properties": {
-                "id": {
-                    "type": "string",
-                    "minLength": 1,
-                    "description": "Optional stable identifier for this link, ideally unique to others."
-                },
-
-                "description": {
-                    "type": "string",
-                    "description": "Optional description of this link.",
-                    "minLength": 1
-                },
-
-                "platforms": {
-                    "type": "array",
-                    "description": "Platforms on which the base link path applies.",
-                    "items": { "$ref": "#/$defs/platform" },
-                    "minItems": 1,
-                    "uniqueItems": true,
-                    "default": ["all"]
-                },
-
-                "target": {
-                    "type": "string",
-                    "minLength": 1,
-                    "description": "Path to the source file or directory to be linked."
-                },
-
-                "link": {
-                    "type": "string",
-                    "minLength": 1,
-                    "description": "Destination path for platforms listed in `platforms`."
-                },
-
-                "kind": {
-                    "type": "string",
-                    "enum": ["file", "dir", "auto"],
-                    "default": "auto",
-                    "description": "Whether the target is a file or directory. Auto-detected by default."
-                },
-
-                "relative": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Whether to construct the symlink using relative paths. Default constructs by resolving to absolute paths."
-                },
-
-                "platform_overrides": {
-                    "type": "object",
-                    "description": "Per-platform destination overrides keyed by platform.",
-                    "default": {},
-                    "propertyNames": {
-                        "$ref": "#/$defs/platform"
-                    },
-                    "additionalProperties": {
-                        "$ref": "#/$defs/platformOverride"
-                    }
-                }
-            }
+          "type": "string",
+          "minLength": 1,
+          "description": "Destination path for platforms listed in `platforms`."
         },
 
-        "platformOverride": {
-            "type": "object",
-            "required": ["link"],
-            "additionalProperties": false,
+        "kind": {
+          "type": "string",
+          "enum": ["file", "dir", "auto"],
+          "default": "auto",
+          "description": "Whether the target is a file or directory. Auto-detected by default."
+        },
 
-            "properties": {
-                "link": {
-                    "type": "string",
-                    "minLength": 1,
-                    "description": "Alternate destination path for this platform."
-                }
-            }
+        "relative": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to construct the symlink using relative paths. Default constructs by resolving to absolute paths."
+        },
+
+        "platform_overrides": {
+          "type": "object",
+          "description": "Per-platform destination overrides keyed by platform.",
+          "default": {},
+          "propertyNames": {
+            "$ref": "#/$defs/platform"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/platformOverride"
+          }
         }
+      }
+    },
+
+    "platformOverride": {
+      "type": "object",
+      "required": ["link"],
+      "additionalProperties": false,
+
+      "properties": {
+        "link": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Alternate destination path for this platform."
+        }
+      }
     }
+  }
 }
