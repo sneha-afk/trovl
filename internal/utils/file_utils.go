@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -47,6 +48,35 @@ func NormalizeWindowsEnvVars(s string) string {
 	})
 }
 
+// ExpandPowerShellVars expands PowerShell-specific variables on Windows
+func ExpandPowerShellVars(s string) (string, error) {
+	if GOOS != "windows" || !strings.Contains(s, "$") {
+		return s, nil
+	}
+
+	knownPSVars := []string{"PROFILE", "PSHOME", "PSScriptRoot", "PSCommandPath"}
+
+	result := s
+	for _, varName := range knownPSVars {
+		pattern := "$" + varName
+		if !strings.Contains(result, pattern) {
+			continue
+		}
+
+		// run powershell to get value
+		cmd := exec.Command("powershell", "-NoProfile", "-Command", fmt.Sprintf("$%s", varName))
+		output, err := cmd.Output()
+		if err != nil {
+			continue
+		}
+
+		value := strings.TrimSpace(string(output))
+		result = strings.ReplaceAll(result, pattern, value)
+	}
+
+	return result, nil
+}
+
 // CleanPath defaults to using an absolute filepath, only relative if specified
 // Guaranteed that filepath.Clean has been called before returning
 func CleanPath(raw string, useRelative bool) (string, error) {
@@ -57,8 +87,15 @@ func CleanPath(raw string, useRelative bool) (string, error) {
 		return filepath.Abs(".")
 	}
 
-	// 1. Normalize Windows shell env syntax to ${}
+	// 1. Normalize Windows shell env syntax to ${} and take care of PowerShell-only vars
 	normalized := NormalizeWindowsEnvVars(raw)
+	if GOOS == "windows" {
+		expanded, err := ExpandPowerShellVars(normalized)
+		if err != nil {
+			return "", err
+		}
+		normalized = expanded
+	}
 
 	// 2. Expand env vars
 	ret := os.ExpandEnv(normalized)
