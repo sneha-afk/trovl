@@ -1,5 +1,9 @@
 #!/bin/sh
 set -e
+# Install script for trovl
+# Usage: curl -fsSL https://raw.githubusercontent.com/sneha-afk/trovl/main/install.sh | sh
+# Variables:
+#        INSTALL_DIR=/custom/path sh install.sh
 
 REPO="sneha-afk/trovl"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
@@ -69,9 +73,9 @@ main() {
         echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
     fi
 
-    if "$INSTALL_DIR/$BINARY_NAME" version >/dev/null 2>&1; then
+    if "$INSTALL_DIR/$BINARY_NAME" --version >/dev/null 2>&1; then
         info "Installation successful!"
-        "$INSTALL_DIR/$BINARY_NAME" version
+        "$INSTALL_DIR/$BINARY_NAME" --version
     else
         warn "Binary installed but verification failed"
     fi

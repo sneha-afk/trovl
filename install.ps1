@@ -1,3 +1,25 @@
+<#
+.SYNOPSIS
+    Install script for trovl
+
+.DESCRIPTION
+    Downloads and installs the latest version of trovl for Windows.
+    Automatically detects architecture and installs to ~/.local/bin by default.
+
+.PARAMETER InstallDir
+    Custom installation directory (default: $env:USERPROFILE\.local\bin)
+
+.EXAMPLE
+    irm https://raw.githubusercontent.com/sneha-afk/trovl/main/install.ps1 | iex
+
+.EXAMPLE
+    .\install.ps1 -InstallDir "C:\bin"
+#>
+
+param(
+    [string]$InstallDir = "$env:USERPROFILE\.local\bin"
+)
+
 $ErrorActionPreference = "Stop"
 
 $Repo = "sneha-afk/trovl"
@@ -46,7 +68,7 @@ try {
     }
 
     try {
-        $version = & "$InstallDir\$BinaryName" version 2>&1
+        $version = & "$InstallDir\$BinaryName" --version 2>&1
         Write-Info "Installation successful!"
         Write-Host $version
     } catch {
