@@ -4,15 +4,55 @@ layout: default
 
 # installation
 
-## Using Go toolchain (recommended!)
+`trovl` can be installed in multiple ways: using **install scripts (recommended)**, Go toolchain, `eget`, or manually with pre-built binaries.
 
-**Requirements:** Go 1.21+
+> **Tip:** The install scripts handle OS and architecture detection automatically, so you don’t have to worry about downloading the wrong binary.
+
+---
+
+## Compatibility
+
+`trovl` currently supports the following operating systems and architectures:
+
+| OS      | Architectures          | Notes |
+|---------|----------------------|-------|
+| Linux   | amd64, arm64          | Adjust download/extract paths if needed |
+| macOS   | amd64 (Intel), arm64 (Apple Silicon) | Pick the correct binary for your architecture |
+| Windows | amd64, arm64          | PowerShell and CMD instructions provided separately |
+
+> ⚠️ Make sure to adjust URLs if you are not using the automated install scripts.
+
+---
+
+## Quick Install (Recommended)
+
+### 1. Using Install Scripts (All Platforms)
+
+This is the easiest method as it automatically detects your OS and architecture.
+
+#### Linux/macOS
 
 ```bash
-go install github.com/sneha-afk/trovl@latest
+curl -fsSL https://raw.githubusercontent.com/sneha-afk/trovl/main/install.sh | sh
+````
+
+Custom installation directory:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sneha-afk/trovl/main/install.sh | INSTALL_DIR=/usr/local/bin sh
 ```
 
-This downloads the source, builds `trovl`, and installs it to `$GOBIN` (defaults to `$GOPATH/bin`).
+#### Windows (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/sneha-afk/trovl/main/install.ps1 | iex
+```
+
+Custom installation directory:
+
+```powershell
+.\install.ps1 -InstallDir "C:\bin"
+```
 
 **Verify installation:**
 
@@ -22,35 +62,66 @@ trovl --version
 
 ---
 
-## Platform-Specific Installation
+### 2. Using Go Toolchain
 
-Pre-built binaries are available for **Linux** (amd64, arm64), **macOS** (Intel & Apple Silicon), and **Windows** (amd64, arm64). All binaries are statically linked with **no additional dependencies**.
+**Requirements:** Go 1.21+
 
-| OS | Architectures |
-|----|---------------|
-| Linux (including WSL) | amd64, arm64 |
-| macOS | amd64 (Intel), arm64 (Apple Silicon) |
-| Windows | amd64, arm64 |
+```bash
+go install github.com/sneha-afk/trovl@latest
+```
 
-**Download from:** [github.com/sneha-afk/trovl/releases](https://github.com/sneha-afk/trovl/releases)
+**Verify installation:**
 
-**Installation location:** The instructions below install the binary to `~/.local/bin` (or `%USERPROFILE%\.local\bin` on Windows), a user-local directory that doesn't require root/administrator privileges. This keeps the installation isolated to your user account and avoids potential conflicts with system packages.
+```bash
+trovl --version
+```
 
-> **Note:** Ensure `~/.local/bin` is in your `PATH`. You can verify if it is already there: `echo $PATH`. If needed, add it to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
-> ```bash
-> export PATH="$HOME/.local/bin:$PATH"
-> ```
-> ```powershell
-> setx PATH "$env:PATH;$env:USERPROFILE\.local\bin"
-> ```
+---
 
-> Note: for safety, any Windows paths have $env:USERPROFILE specified, though modern builds automatically expand `~` when specified.
+### 3. Using `eget` (all platforms)
+
+```bash
+eget sneha-afk/trovl
+```
+
+**Verify installation:**
+
+```bash
+trovl --version
+```
+
+[Install `eget`](https://github.com/zyedidia/eget) if needed.
+
+---
+
+## Manual Installation (Pre-built Binaries)
+
+Pre-built binaries are available for Linux, macOS, and Windows.
+
+**Download from:** [GitHub Releases](https://github.com/sneha-afk/trovl/releases)
+
+**Recommended installation location:** to simplify your ACLs
+
+| OS          | Default Location           |
+| ----------- | -------------------------- |
+| Linux/macOS | `~/.local/bin`             |
+| Windows     | `%USERPROFILE%\.local\bin` |
+
+> Make sure the directory is in your `PATH`.
+
+```bash
+# Linux/macOS
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+```powershell
+# Windows PowerShell
+setx PATH "$env:PATH;$env:USERPROFILE\.local\bin"
+```
 
 ---
 
 ### Linux
-
-#### Pre-built Binary
 
 ```bash
 curl -LO https://github.com/sneha-afk/trovl/releases/latest/download/trovl_linux_amd64.tar.gz
@@ -59,39 +130,28 @@ tar -xzf trovl_linux_amd64.tar.gz
 mkdir -p "$HOME/.local/bin"
 mv trovl "$HOME/.local/bin/"
 
-trovl version
+trovl --version
 ```
-
----
 
 ### macOS
 
-#### Pre-built Binary
-
-Assuming an `arm64` installation:
+For Apple Silicon (`arm64`):
 
 ```bash
-# Download and extract
 curl -LO https://github.com/sneha-afk/trovl/releases/latest/download/trovl_macos_arm64.tar.gz
 tar -xzf trovl_macos_arm64.tar.gz
 
-# Move to PATH
 mkdir -p "$HOME/.local/bin"
 mv trovl "$HOME/.local/bin/"
 
-# Verify
-trovl version
+trovl --version
 ```
 
----
+For Intel (`amd64`), replace `arm64` with `amd64`.
 
 ### Windows
 
-#### Pre-built Binary
-
-`arm64` binaries are also available!
-
-##### **PowerShell:**
+#### PowerShell
 
 ```powershell
 curl -LO https://github.com/sneha-afk/trovl/releases/latest/download/trovl_windows_amd64.zip
@@ -102,10 +162,10 @@ move trovl.exe "$env:USERPROFILE\.local\bin\"
 
 setx PATH "$env:PATH;$env:USERPROFILE\.local\bin"
 
-trovl version
+trovl --version
 ```
 
-##### **Command Prompt:**
+#### Command Prompt
 
 ```cmd
 curl -LO https://github.com/sneha-afk/trovl/releases/latest/download/trovl_windows_amd64.zip
@@ -116,29 +176,23 @@ move trovl.exe "%USERPROFILE%\.local\bin\"
 
 setx PATH "%PATH%;%USERPROFILE%\.local\bin"
 
-trovl version
+trovl --version
 ```
 
 ---
 
 ## Verifying Checksums (Optional)
 
-Verifying checksums ensures the downloaded file hasn't been tampered with or corrupted during transfer. Compare the computed hash against the value shown on the GitHub releases page, or download the `checksums.txt` file for automated verification.
+Ensures downloads haven’t been corrupted or tampered with.
 
-**Download checksums file:**
 ```bash
 curl -LO https://github.com/sneha-afk/trovl/releases/latest/download/checksums.txt
 ```
 
 ### Linux/macOS
 
-Compute checksum:
 ```bash
 sha256sum trovl_linux_amd64.tar.gz
-```
-
-Automatically verify against checksums file:
-```bash
 sha256sum -c checksums.txt
 ```
 
@@ -146,48 +200,41 @@ sha256sum -c checksums.txt
 
 #### PowerShell
 
-Compute checksum:
 ```powershell
-Get-FileHash trovl_windows_amd64.zip -Algorithm SHA256
-```
-
-**Automatically verify against checksums file:**
-```powershell
-(Get-FileHash trovl_windows_amd64.zip).Hash -eq (Select-String trovl_windows_amd64.zip checksums.txt).Line.Split()[0]
+(Get-FileHash trovl_windows_amd64.zip -Algorithm SHA256).Hash -eq (Select-String trovl_windows_amd64.zip checksums.txt).Line.Split()[0]
 ```
 
 #### Command Prompt
 
-Compute checksum:
 ```cmd
 certutil -hashfile trovl_windows_amd64.zip SHA256
 ```
 
-Compare the output hash with the value on the GitHub releases page or in `checksums.txt`.
+Compare output with `checksums.txt`.
 
 ---
 
 ## Updating
 
-To update `trovl`, repeat the installation steps with the latest release. The new binary will overwrite the old one.
-
-**For `go install` users:**
+Repeat the installation steps or use the same tool:
 
 ```bash
+# Go
 go install github.com/sneha-afk/trovl@latest
+
+# eget
+eget sneha-afk/trovl
 ```
 
-**Tip:** You can check your current version and compare it against the latest release on GitHub:
+Check your version:
 
 ```bash
-trovl version
+trovl --version
 ```
 
 ---
 
 ## Uninstalling
-
-Remove the binary from its installation location:
 
 ### Linux/macOS
 
@@ -213,4 +260,4 @@ del "%USERPROFILE%\.local\bin\trovl.exe"
 
 ## Need Help?
 
-If you encounter any issues, please open an issue: [github.com/sneha-afk/trovl/issues](https://github.com/sneha-afk/trovl/issues)
+If you encounter issues, open an issue: [github.com/sneha-afk/trovl/issues](https://github.com/sneha-afk/trovl/issues)

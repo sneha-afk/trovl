@@ -67,6 +67,7 @@ trovl supports the following platforms for `platforms` field in manifests:
 - `linux` - Linux systems
 - `darwin` - macOS systems
 - `windows` - Windows systems
+- `wsl` - Linux systems being hosted on WSL
 - `all` - All platforms
 
 
