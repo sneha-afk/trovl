@@ -8,7 +8,7 @@ This guide will get you up and running with trovl in minutes.
 
 ## Prerequisites
 
-- trovl installed on your system (see [Installation](installation.md))
+- trovl installed on your system (see [Installation](install.md))
 - Basic familiarity with symbolic links
 - Editor for manifest files
 

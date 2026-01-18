@@ -16,12 +16,31 @@ A simple, cross-platform symlink manager that eliminates the pain of managing sy
 
 See [INSTALL.md](./docs/install.md) for detailed installation instructions including pre-built binaries.
 
-### Recommended: install with Go
+### Recommended: install scripts
+The default directory for the binary will be `~/.local/bin` on all platforms. See [INSTALL.md](./docs/install.md) for how this can be changed.
+
+UNIX-based systems:
+```bash
+curl -fsSL https://raw.githubusercontent.com/sneha-afk/trovl/main/install.sh | sh
+```
+
+Windows:
+```powershell
+irm https://raw.githubusercontent.com/sneha-afk/trovl/main/install.ps1 | iex
+```
+
+### Using the Go toolchain
 ```bash
 go install github.com/sneha-afk/trovl@latest
 ```
 
 Re-running this command will install the latest released version and overwrite the existing binary.
+
+### Using `eget` on any platform
+
+```bash
+eget sneha-afk/trovl
+```
 
 ### Pre-built binaries from [Releases](https://github.com/sneha-afk/trovl/releases)
 
@@ -30,16 +49,6 @@ Requirements:
 - `tar` or `Expand-Archive` (i.e any archive tool)
 
 See [INSTALL.md](./docs/install.md) for all directions.
-
-<details>
-<summary>Example install for linux-amd64</summary>
-
-```bash
-curl -LO https://github.com/sneha-afk/trovl/releases/latest/download/trovl_linux_amd64.tar.gz
-tar -xzf trovl_linux_amd64.tar.gz
-```
-
-</details>
 
 ### Build from source
 
@@ -112,7 +121,8 @@ See the full [schema documentation](https://github.com/sneha-afk/trovl/blob/main
 | `help` | Display help for any command |
 | `--version` | Show version information |
 
-See the full documentation at [./docs/commands.md].
+
+See the [full documentation](./docs/commands.md) for more information.
 
 ## Contributing
 

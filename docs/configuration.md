@@ -6,83 +6,98 @@ layout: default
 
 ## Environment Variables <a name="environment-variables"></a>
 
-trovl respects the following environment variables:
+`trovl` adheres to the XDG specification where applicable.
 
-- `XDG_CACHE_HOME` - Cache directory: trovl will always respect what is set for `$XDG_CACHE_HOME` first before following back to [Go's defaults](https://pkg.go.dev/os#UserCacheDir):
-    - Unix: `$HOME/.cache`
-    - Darwin (macOS): `$HOME/Library/Caches`
-    - Windows: `%LocalAppData%`
+On **all platforms**, XDG environment variables are **always honored first**.
 
-    trovl uses `$XDG_CACHE_HOME/trovl/backups` to store any backed up files.
-- `XDG_CONFIG_HOME` - Config directory will be located at `$XDG_CONFIG_HOME/trovl`
-    - On all systems, the value set for `$XDG_CONFIG_HOME` is scouted first before falling back to `~/.config`
+Fallback paths are used **only when the corresponding XDG variable is unset**.
+
+#### `XDG_CACHE_HOME`
+
+Defines the base directory for cache and backup data.
+
+* If set, `trovl` uses `XDG_CACHE_HOME` directly.
+* If unset, `trovl` falls back to Go’s platform defaults (`os.UserCacheDir`):
+    * **Linux / Unix:** `$HOME/.cache`
+    * **macOS (Darwin):** `$HOME/Library/Caches`
+    * **Windows:** `%LocalAppData%`
+
+Backups are stored at `<cache-dir>/trovl/backups`.
+
+#### `XDG_CONFIG_HOME`
+
+Defines the base directory for configuration files.
+
+* If set, the config directory is `XDG_CONFIG_HOME/trovl`.
+* If unset, the config directory falls back to `~/.config/trovl` on all platforms.
 
 ## Manifests
 
-A manifest contains a list of links to apply. These take in fields for which platforms the link should be applied on, and
-overrides for certain platforms. A manifest file is in JSON format for ease of use, see [`trovl apply`](/trovl/cli/trovl_apply/)
-to see how to "run" a manifest.
+A **manifest** describes which symlinks `trovl` should create and on which platforms.
 
-### Writing a manifest
+Manifests are JSON files. See [`trovl apply`](/trovl/cli/trovl_apply/) for details on applying one.
 
-Defining the `$schema` property allows an IDE and/or LSPs to validate your JSON file according to a defined schema:
+### Minimal manifest
 
-```
-{
-  "$schema": "https://github.com/sneha-afk/trovl/raw/main/docs/trovl_schema.json",
-}
-```
+Only two fields are required per link:
 
-After this, the manifest is simply a list of links to define:
+- `target`: what the symlink points to
+- `link`: where the symlink is created
+
 ```json
 {
   "$schema": "https://github.com/sneha-afk/trovl/raw/main/docs/trovl_schema.json",
   "links": [
     {
-      "target": "example_target",
-      "link": "example_symlink",
-      "platforms": [
-        "all"
-      ],
-      "relative": false,
-      "platform_overrides": {
-        "linux": {
-          "link": "example_override"
-        }
-      }
+      "target": "~/dotfiles/.vimrc",
+      "link": "~/.vimrc"
     }
   ]
 }
 ```
 
-The *only* required attributes of a link are the *target* (what file/directory does the symlink point to?) and the *link* (position and name of the symlink, its path).
+### Optional fields
 
-The default attributes for the other keys are:
-- `relative = false`: links should be constructed using their absolute paths from the root of the user's filesystem
-- `platforms = ["all"]`: this link applies to all platforms
-- `platform_overrides = {}`: no overrides for any platform
+The default values are shown:
 
-trovl supports the following platforms for `platforms` field in manifests:
+* `relative = false`: use absolute paths
+* `platforms = ["all"]`: apply everywhere
+* `platform_overrides = {}`: no per-platform overrides
 
-- `linux` - Linux systems
-- `darwin` - macOS systems
-- `windows` - Windows systems
-- `wsl` - Linux systems being hosted on WSL
-- `all` - All platforms
+Supported platform values:
 
+* `linux`
+* `darwin`
+* `windows`
+* `wsl`
+* `all` (implicit if no platforms list is specified)
 
-### Default manifest
+---
 
-On commands where trovl expects manifest files, if no such path is passed in, trovl will attempt to read from `$XDG_CONFIG_HOME/trovl/manifest.json`.
+### Default manifest location
 
-> Tip: perhaps your dotfile setup can be stored in the default manifest!
+If no manifest path is provided, `trovl` reads:
 
-You can generate a starting manifest by using `trovl generate` which will be in the default location, or specify where with `trovl generate <path>`.
+`$XDG_CONFIG_HOME/trovl/manifest.json`
 
+> Tip: This works well as a dotfiles manifest!
+
+Generate one with [`trovl generate`](/trovl/docs/cli/trovl_generate.md)
+
+```bash
+# to the default location
+trovl generate
+```
+
+---
 
 ### Example
 
-The following manifest sets up `.vimrc` with an override for Windows, and a relative link for trovl's configuration directory to home (by running this command *at home*, hence the `./`):
+This manifest (located at [`example_manifest.json`](https://github.com/sneha-afk/trovl/blob/main/docs/example_manifest.json))
+
+* Links `.vimrc`, with a Windows override
+* Uses a relative link for trovl’s config directory
+
 ```json
 {
   "$schema": "https://github.com/sneha-afk/trovl/raw/main/docs/trovl_schema.json",
@@ -104,6 +119,4 @@ The following manifest sets up `.vimrc` with an override for Windows, and a rela
   ]
 }
 ```
-
-This example is hosted at [example_manifest.json](https://github.com/sneha-afk/trovl/blob/main/docs/example_manifest.json)
 

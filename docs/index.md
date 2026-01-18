@@ -30,7 +30,7 @@ It’s inspired by [GNU stow](https://www.gnu.org/software/stow/), but currently
     }
   ]
 }
-````
+```
 
 ```bash
 trovl apply manifest.json

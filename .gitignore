@@ -39,3 +39,5 @@ dist/
 .trovl
 trovl.json
 .trovl.json
+
+.venv
