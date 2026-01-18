@@ -11,7 +11,24 @@ import (
 	"github.com/mattn/go-isatty"
 )
 
-const LogTimeFormat = "2006-01-02 15:04:05"
+const LogTimeFormat = "15:04:05"
+
+const (
+	ColorDebug     = "\033[90m" // Bright black/gray
+	ColorInfo      = "\033[36m" // Cyan
+	ColorLink      = "\033[34m" // Blue
+	ColorBackup    = "\033[35m" // Magenta
+	ColorOverwrite = "\033[33m" // Yellow
+	ColorWarning   = "\033[33m" // Yellow
+	ColorError     = "\033[31m" // Red
+	ColorDryRun    = "\033[93m" // Bright yellow
+	ColorReset     = "\033[0m"  // Reset
+)
+
+// colorize wraps text in ANSI color codes
+func colorize(text, color string) string {
+	return color + text + ColorReset
+}
 
 type TrovlOptions struct {
 	Verbose      bool
@@ -34,53 +51,25 @@ type TrovlState struct {
 func New(opts *TrovlOptions) *TrovlState {
 	lvl := &slog.LevelVar{}
 
-	// handlerOpts := &slog.HandlerOptions{
-	// 	Level:     lvl,
-	// 	AddSource: opts.Debug, // Show file/line only during debug
-	// 	ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr { // [LEVEL] file:line msg key=val
-	// 		if a.Key == slog.TimeKey {
-	// 			return slog.Attr{}
-	// 		}
-	// 		if a.Key == slog.LevelKey {
-	// 			return slog.Attr{
-	// 				Key:   "",
-	// 				Value: slog.StringValue(fmt.Sprintf("[%s]", a.Value.String())),
-	// 			}
-	// 		}
-	//
-	// 		if a.Key == slog.SourceKey {
-	// 			source := a.Value.Any().(*slog.Source)
-	// 			return slog.Attr{
-	// 				Key:   "",
-	// 				Value: slog.StringValue(fmt.Sprintf("[%s:%d]", source.File, source.Line)),
-	// 			}
-	// 		}
-	//
-	// 		return a
-	// 	},
-	// }
-
 	if opts == nil {
 		opts = &TrovlOptions{}
 	}
 
 	logger := slog.New(tint.NewHandler(os.Stderr, &tint.Options{
-		Level:     lvl,
-		AddSource: opts.Debug,
-		// TimeFormat: time.RFC3339,
+		Level:      lvl,
+		AddSource:  opts.Debug,
 		TimeFormat: LogTimeFormat,
 		NoColor:    !isatty.IsTerminal(os.Stderr.Fd()),
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-			// Print error keys in red
 			if a.Value.Kind() == slog.KindAny {
 				if _, ok := a.Value.Any().(error); ok {
 					return tint.Attr(9, a)
 				}
 			}
 
-			// Add a [DRY-RUN] tag
 			if a.Key == slog.MessageKey && opts.DryRun {
-				return slog.String(a.Key, "[DRY-RUN] "+a.Value.String())
+				dryRunTag := colorize("[DRY-RUN]", ColorDryRun)
+				return slog.String(a.Key, dryRunTag+" "+a.Value.String())
 			}
 
 			return a
@@ -97,7 +86,6 @@ func New(opts *TrovlOptions) *TrovlState {
 		Level:   lvl,
 	}
 	state.SetLogLevel()
-
 	return &state
 }
 
@@ -123,4 +111,35 @@ func (s *TrovlState) SetLogLevel() {
 	default:
 		s.Level.Set(slog.LevelWarn)
 	}
+}
+
+func (s *TrovlState) LogLink(msg string, args ...any) {
+	taggedMsg := colorize("[LINK]", ColorLink) + " " + msg
+	s.Logger.Info(taggedMsg, args...)
+}
+
+func (s *TrovlState) LogBackup(msg string, args ...any) {
+	taggedMsg := colorize("[BACKUP]", ColorBackup) + " " + msg
+	s.Logger.Info(taggedMsg, args...)
+}
+
+func (s *TrovlState) LogOverwrite(msg string, args ...any) {
+	taggedMsg := colorize("[OVERWRITE]", ColorOverwrite) + " " + msg
+	s.Logger.Info(taggedMsg, args...)
+}
+
+func (s *TrovlState) LogDebug(msg string, args ...any) {
+	s.Logger.Debug(msg, args...)
+}
+
+func (s *TrovlState) LogInfo(msg string, args ...any) {
+	s.Logger.Info(msg, args...)
+}
+
+func (s *TrovlState) LogWarn(msg string, args ...any) {
+	s.Logger.Warn(msg, args...)
+}
+
+func (s *TrovlState) LogError(msg string, args ...any) {
+	s.Logger.Error(msg, args...)
 }
