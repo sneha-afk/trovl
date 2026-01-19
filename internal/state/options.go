@@ -21,6 +21,7 @@ const (
 	ColorOverwrite = "\033[33m" // Yellow
 	ColorWarning   = "\033[33m" // Yellow
 	ColorError     = "\033[31m" // Red
+	ColorSuccess   = "\033[92m" // Bright green
 	ColorDryRun    = "\033[93m" // Bright yellow
 	ColorReset     = "\033[0m"  // Reset
 )
@@ -76,10 +77,6 @@ func New(opts *TrovlOptions) *TrovlState {
 		},
 	}))
 
-	if opts.DryRun {
-		logger = logger.With("dry_run", true)
-	}
-
 	state := TrovlState{
 		Options: opts,
 		Logger:  logger,
@@ -91,14 +88,6 @@ func New(opts *TrovlOptions) *TrovlState {
 
 func DefaultState() *TrovlState {
 	return New(&TrovlOptions{})
-}
-
-func (s *TrovlState) Verbose() bool {
-	return s.Options.Verbose
-}
-
-func (s *TrovlState) Debug() bool {
-	return s.Options.Debug
 }
 
 // SetLogLevel should be called after setting or changing the log level
@@ -128,18 +117,7 @@ func (s *TrovlState) LogOverwrite(msg string, args ...any) {
 	s.Logger.Info(taggedMsg, args...)
 }
 
-func (s *TrovlState) LogDebug(msg string, args ...any) {
-	s.Logger.Debug(msg, args...)
-}
-
-func (s *TrovlState) LogInfo(msg string, args ...any) {
-	s.Logger.Info(msg, args...)
-}
-
-func (s *TrovlState) LogWarn(msg string, args ...any) {
-	s.Logger.Warn(msg, args...)
-}
-
-func (s *TrovlState) LogError(msg string, args ...any) {
-	s.Logger.Error(msg, args...)
+func (s *TrovlState) LogSuccess(msg string, args ...any) {
+	taggedMsg := colorize("[SUCCESS]", ColorSuccess) + " " + msg
+	s.Logger.Info(taggedMsg, args...)
 }

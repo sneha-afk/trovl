@@ -27,12 +27,12 @@ See [trovl's use of environment variables](/trovl/configuration/#environment-var
 			symlink := args[i+1]
 
 			if err := links.Add(State, target, symlink); err != nil {
-				State.Logger.Error("Failed to create link (maybe try running as admin?)", "error", err)
+				State.Logger.Error("Failed to create symlink (hint: try running as admin?)", "error", err)
 				os.Exit(1)
 			}
 
 			if !State.Options.DryRun {
-				State.Logger.Info("Successfully added symlink", "link", symlink, "target", target)
+				State.LogSuccess("Added symlink", "target", target, "link", symlink)
 			}
 		}
 	},

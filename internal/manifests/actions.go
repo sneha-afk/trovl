@@ -130,7 +130,7 @@ func (m *Manifest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (m *Manifest) Apply(state *state.TrovlState) error {
+func (m *Manifest) Apply(s *state.TrovlState) error {
 	var linkToUse string
 	var numLinks = len(m.Links)
 	var isWSL = isWSL()
@@ -146,12 +146,12 @@ func (m *Manifest) Apply(state *state.TrovlState) error {
 			if slices.Contains(link.Platforms, "all") || slices.Contains(link.Platforms, runtime.GOOS) || (isWSL && slices.Contains(link.Platforms, "wsl")) {
 				linkToUse = link.Link
 			} else {
-				state.Logger.Warn(fmt.Sprintf("links[%d]: link does not apply to current platform, skipping", i), "linkIndex", i, "target", link.Target)
+				s.Logger.Warn(fmt.Sprintf("links[%d]: link does not apply to current platform, skipping", i), "linkIndex", i, "target", link.Target)
 				continue
 			}
 		}
 
-		err := links.Add(state, link.Target, linkToUse)
+		err := links.Add(s, link.Target, linkToUse)
 		if errors.Is(err, links.ErrDeclinedOverwrite) || errors.Is(err, links.ErrDeclinedBackup) {
 			err = nil
 			continue
@@ -160,8 +160,8 @@ func (m *Manifest) Apply(state *state.TrovlState) error {
 			return fmt.Errorf("links[%d]: %w", i, err)
 		}
 
-		if !state.Options.DryRun {
-			state.Logger.Info(fmt.Sprintf("Successfully added symlink [%v/%v]", i+1, numLinks), "link", linkToUse, "target", link.Target)
+		if !s.Options.DryRun {
+			s.LogSuccess(fmt.Sprintf("Added symlink [%v/%v]", i+1, numLinks), "target", link.Target, "link", linkToUse)
 		}
 	}
 
