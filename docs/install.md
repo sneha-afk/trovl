@@ -159,7 +159,7 @@ For Intel (`amd64`), replace `arm64` with `amd64`.
 
 ```powershell
 curl -LO https://github.com/sneha-afk/trovl/releases/latest/download/trovl_windows_amd64.zip
-Expand-Archive trovl_windows_amd64.zip
+Expand-Archive trovl_windows_amd64.zip -DestinationPath .
 
 mkdir "$env:USERPROFILE\.local\bin" -Force
 move trovl.exe "$env:USERPROFILE\.local\bin\"
