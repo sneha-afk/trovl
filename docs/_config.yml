@@ -32,11 +32,33 @@ navigation:
       - name: remove
         link: "/trovl/cli/trovl_remove/"
 
+compress_html:
+  ignore:
+    envs: all
+
 kramdown:
+  input: GFM
+  syntax_highlighter: rouge
   syntax_highlighter_opts:
     block:
       line_numbers: true
 enable_copy_code_button: true
+
+callouts:
+  highlight:
+    color: yellow
+  important:
+    title: Important
+    color: blue
+  new:
+    title: New
+    color: green
+  note:
+    title: Note
+    color: purple
+  warning:
+    title: Warning
+    color: red
 
 defaults:
   - scope:
