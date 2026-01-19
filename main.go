@@ -25,7 +25,7 @@ import (
 	"github.com/sneha-afk/trovl/cmd"
 )
 
-var version string = "v1"
+var version string = "v1.2.1"
 
 func main() {
 	cmd.Execute(version)
