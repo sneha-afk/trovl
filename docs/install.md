@@ -8,6 +8,7 @@ nav_order: 2
 
 `trovl` can be installed in multiple ways: using **install scripts (recommended)**, Go toolchain, `eget`, or manually with pre-built binaries.
 
+{: .important }
 > **Tip:** The install scripts handle OS and architecture detection automatically, so you don’t have to worry about downloading the wrong binary.
 
 ---
@@ -22,6 +23,7 @@ nav_order: 2
 | macOS   | amd64 (Intel), arm64 (Apple Silicon) | Pick the correct binary for your architecture |
 | Windows | amd64, arm64          | PowerShell and CMD instructions provided separately |
 
+{: .important }
 > ⚠️ Make sure to adjust URLs if you are not using the automated install scripts.
 
 ---

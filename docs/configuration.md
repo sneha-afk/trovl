@@ -14,7 +14,7 @@ On **all platforms**, XDG environment variables are **always honored first**.
 
 Fallback paths are used **only when the corresponding XDG variable is unset**.
 
-#### `XDG_CACHE_HOME`
+### `XDG_CACHE_HOME`
 
 Defines the base directory for cache and backup data.
 
@@ -26,7 +26,7 @@ Defines the base directory for cache and backup data.
 
 Backups are stored at `<cache-dir>/trovl/backups`.
 
-#### `XDG_CONFIG_HOME`
+### `XDG_CONFIG_HOME`
 
 Defines the base directory for configuration files.
 
@@ -78,10 +78,9 @@ Supported platform values:
 
 ### Default manifest location
 
-If no manifest path is provided, `trovl` reads:
+If no manifest path is provided, `trovl` reads from **`$XDG_CONFIG_HOME/trovl/manifest.json`**
 
-`$XDG_CONFIG_HOME/trovl/manifest.json`
-
+{: .highlight }
 > Tip: This works well as a dotfiles manifest!
 
 Generate one with [`trovl generate`](/trovl/docs/cli/trovl_generate.md)

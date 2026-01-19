@@ -34,7 +34,8 @@ trovl add ~/myfile.txt ~/Desktop/mylink.txt
 
 This creates a symlink at `~/Desktop/mylink.txt` that points to `~/myfile.txt`.
 
-> Tip: when creating the symlink, all parent directories above it will be too, in this case Desktop.
+{: .important }
+> When creating the symlink, all parent directories above it will be too, in this case Desktop.
 
 ### Step 3: Verify the symlink
 
@@ -69,6 +70,7 @@ Create a file named `manifest.json` (note: the name *does not matter*):
 }
 ```
 
+{: .highlight }
 > Note: trovl never creates dangling links, so if these two targets do not exist, you will probably get an error.
 
 ### Step 2: Preview the changes
