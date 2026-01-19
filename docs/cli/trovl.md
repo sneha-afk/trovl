@@ -1,3 +1,10 @@
+---
+title: "trovl"
+parent: Commands
+slug: "trovl"
+description: "CLI reference for trovl"
+---
+
 ## trovl
 
 A cross-platform symlink manager.

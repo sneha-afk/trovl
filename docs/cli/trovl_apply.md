@@ -1,3 +1,10 @@
+---
+title: "trovl apply"
+parent: Commands
+slug: "trovl_apply"
+description: "CLI reference for trovl apply"
+---
+
 ## trovl apply
 
 Applies a manifest specified by schema (default: `$XDG_CONFIG_HOME/trovl/manifest.json`)

@@ -47,7 +47,7 @@ func generate(path string) {
 		os.Exit(1)
 	}
 
-	State.Logger.Info("Generated manifest", "path", path)
+	State.LogSuccess("Generated default manifest file", "path", path)
 }
 
 // generateCmd represents the generate command

@@ -1,3 +1,10 @@
+---
+title: "trovl add"
+parent: Commands
+slug: "trovl_add"
+description: "CLI reference for trovl add"
+---
+
 ## trovl add
 
 Adds a symlink that points to the target file

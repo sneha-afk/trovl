@@ -21,7 +21,7 @@ in as truly being a symlink to prevent data loss.`,
 			}
 
 			if !State.Options.DryRun {
-				State.Logger.Info("Successfully removed symlink", "link", symlink)
+				State.LogSuccess("Removed symlink", "link", symlink)
 			}
 		}
 	},

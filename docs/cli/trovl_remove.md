@@ -1,3 +1,10 @@
+---
+title: "trovl remove"
+parent: Commands
+slug: "trovl_remove"
+description: "CLI reference for trovl remove"
+---
+
 ## trovl remove
 
 Removes a specified symlink while keeping the target file as-is.

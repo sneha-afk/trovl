@@ -41,7 +41,7 @@ falling back to OS defaults. The backup directory is ` + "`$XDG_CACHE_HOME/trovl
 			defaultManifest, err := manifests.New(path)
 			if err != nil {
 				if err == os.ErrNotExist {
-					State.Logger.Error("Did not find manifest at the default location", "defaultLocation", path)
+					State.Logger.Error("Manifest not found at default location", "expected_location", path)
 				} else {
 					State.Logger.Error("Error reading the default manifest", "error", err)
 				}
@@ -65,6 +65,10 @@ falling back to OS defaults. The backup directory is ` + "`$XDG_CACHE_HOME/trovl
 			if err := m.Apply(State); err != nil {
 				State.Logger.Error("Could not apply manifest file", "error", err)
 				os.Exit(1)
+			}
+
+			if !State.Options.DryRun {
+				State.LogSuccess("Applied manifest file", "path", path)
 			}
 		}
 

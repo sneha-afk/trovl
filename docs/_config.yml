@@ -5,9 +5,8 @@ permalink: pretty
 
 plugins:
   - jekyll-remote-theme
-remote_theme: vaibhavvikas/jekyll-theme-minimalistic
-color-scheme: auto
-color_scheme: auto
+remote_theme: just-the-docs/just-the-docs
+color_scheme: dark
 favicon: true
 
 navigation:
@@ -32,6 +31,12 @@ navigation:
         link: "/trovl/cli/trovl_plan/"
       - name: remove
         link: "/trovl/cli/trovl_remove/"
+
+kramdown:
+  syntax_highlighter_opts:
+    block:
+      line_numbers: true
+enable_copy_code_button: true
 
 defaults:
   - scope:

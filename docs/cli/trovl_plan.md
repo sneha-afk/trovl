@@ -1,3 +1,10 @@
+---
+title: "trovl plan"
+parent: Commands
+slug: "trovl_plan"
+description: "CLI reference for trovl plan"
+---
+
 ## trovl plan
 
 Describes what will happen during an `apply` without modifying the filesystem

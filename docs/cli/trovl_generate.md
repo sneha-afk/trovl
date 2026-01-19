@@ -1,3 +1,10 @@
+---
+title: "trovl generate"
+parent: Commands
+slug: "trovl_generate"
+description: "CLI reference for trovl generate"
+---
+
 ## trovl generate
 
 Generate a blank manifest file with the current schema (default: `$XDG_CONFIG_HOME/trovl/manifest.json`).
